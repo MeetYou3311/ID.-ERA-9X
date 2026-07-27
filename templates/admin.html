@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}管理后台 · {{ site_name }}{% endblock %}
+{% block nav %}
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container">
+    <span class="navbar-brand mb-0 brand">
+      <i class="bi bi-shield-lock-fill text-warning me-1"></i>管理后台
+    </span>
+    <div>
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2">查看前台</a>
+      <span class="text-light small me-2">{{ admin_user }}</span>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">退出</a>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- 统计卡片 -->
+<div class="row g-3 mb-4">
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="h3 mb-0 text-success">{{ stats.active }}</div>
+        <div class="small text-muted">可用</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="h3 mb-0 text-secondary">{{ stats.taken }}</div>
+        <div class="small text-muted">已领取</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.total }}</div>
+        <div class="small text-muted">累计导入</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- 左：导入 -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-upload me-1"></i>导入文案</div>
+      <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="importTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#batch" type="button">批量导入</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#single" type="button">单条添加</button>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="batch">
+            <form method="post" action="{{ url_for('admin_import') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="mode" value="batch">
+              <div class="mb-2">
+                <label class="form-label small">分类</label>
+                <input type="text" name="category" class="form-control form-control-sm" placeholder="如：升级码 / 客服话术 / 未分类" value="未分类">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">每行一条文案（支持 <code>标题||内容</code> 格式）</label>
+                <textarea name="batch" class="form-control" rows="8" placeholder="直接粘贴多行内容，每行一条&#10;或使用：标题||具体内容"></textarea>
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-plus-lg me-1"></i>批量导入</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="single">
+            <form method="post" action="{{ url_for('admin_import') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="mode" value="single">
+              <div class="row g-2 mb-2">
+                <div class="col-7">
+                  <label class="form-label small">标题</label>
+                  <input type="text" name="title" class="form-control form-control-sm" placeholder="留空则自动截取内容前 20 字">
+                </div>
+                <div class="col-5">
+                  <label class="form-label small">分类</label>
+                  <input type="text" name="category" class="form-control form-control-sm" value="未分类">
+                </div>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">内容</label>
+                <textarea name="content" class="form-control" rows="4" placeholder="文案内容"></textarea>
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-plus-lg me-1"></i>添加</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 不足阈值设置 -->
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin_setting') }}" class="row g-2 align-items-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="col-auto">
+            <label class="form-label small mb-0">文案不足阈值（条）</label>
+            <input type="number" name="threshold" min="0" class="form-control form-control-sm"
+                   style="width:7rem" value="{{ threshold }}">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary btn-sm" type="submit">保存</button>
+          </div>
+          <div class="col-auto small text-muted">剩余可用 ≤ 该值时，前台显示“文案不足”提示</div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右：列表 -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold d-flex justify-content-between">
+        <span><i class="bi bi-list-check me-1"></i>可用文案（{{ active|length }}）</span>
+      </div>
+      <ul class="list-group list-group-flush" style="max-height:420px;overflow:auto">
+        {% for it in active %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="me-2" style="min-width:0">
+              <div class="fw-bold small text-truncate">{{ it.title }}</div>
+              <div class="text-muted small text-truncate">{{ it.content }}</div>
+              <span class="badge bg-info text-dark cat-badge">{{ it.category }}</span>
+            </div>
+            <form method="post" action="{{ url_for('admin_delete', item_id=it.id) }}" class="flex-shrink-0">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="btn btn-outline-danger btn-sm" type="submit" title="删除"
+                      onclick="return confirm('确定删除该文案？')">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted small">暂无可用文案</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-archive me-1"></i>已领取（{{ taken|length }}）</div>
+      <ul class="list-group list-group-flush" style="max-height:320px;overflow:auto">
+        {% for it in taken %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="me-2" style="min-width:0">
+              <div class="small text-truncate">{{ it.title }}</div>
+              <div class="text-muted" style="font-size:.75rem">{{ it.taken_at }}</div>
+            </div>
+            <form method="post" action="{{ url_for('admin_restore', item_id=it.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="btn btn-outline-secondary btn-sm" type="submit" title="恢复为可领取">恢复</button>
+            </form>
+          </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted small">暂无领取记录</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码 -->
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('admin_change_password') }}" class="row g-2 align-items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="col-auto">
+        <label class="form-label small mb-0">修改管理员密码</label>
+        <input type="password" name="new_password" minlength="6" class="form-control form-control-sm" style="width:14rem" placeholder="至少 6 位">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-secondary btn-sm" type="submit">更新</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

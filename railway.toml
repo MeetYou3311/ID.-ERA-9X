@@ -1,0 +1,9 @@
+# Railway 部署配置（Railway 会自动用 Nixpacks 识别 requirements.txt 与 Procfile）
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "gunicorn -w 4 -b 0.0.0.0:$PORT app:app"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"

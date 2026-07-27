@@ -1,0 +1,20 @@
+# Render 一键部署配置
+# 部署后请到 Render 控制台 -> 该服务 -> Environment 设置 ADMIN_PASSWORD（强烈建议修改默认密码）
+services:
+  - type: web
+    name: id-era-9x-share
+    runtime: python
+    plan: free
+    region: oregon          # 可选：singapore / frankfurt 等
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT app:app
+    healthCheckPath: /
+    envVars:
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      # ADMIN_PASSWORD 请在部署后于控制台手动设置（不写此处以避免明文泄露）
