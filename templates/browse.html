@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 {% block title %}{{ site_name }} · 文案分享{% endblock %}
+
 {% block nav %}
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg topbar bg-white sticky-top">
   <div class="container">
-    <span class="navbar-brand mb-0 brand">
-      <i class="bi bi-box-seam-fill text-warning me-1"></i>{{ site_name }}
+    <span class="navbar-brand fw-bold d-flex align-items-center gap-2 mb-0">
+      <span class="brand-logo"><i class="bi bi-stars"></i></span>
+      <span class="text-gradient">{{ site_name }}</span>
     </span>
-    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm" title="管理员入口">
+    <a href="{{ url_for('admin_login') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
       <i class="bi bi-shield-lock me-1"></i>管理员
     </a>
   </div>
@@ -16,8 +18,8 @@
 {% block content %}
 <!-- 文案不足提示 -->
 {% if low_stock %}
-<div class="alert alert-warning d-flex align-items-center" role="alert">
-  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+<div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center gap-2 mb-4" role="alert">
+  <i class="bi bi-exclamation-triangle-fill fs-5"></i>
   <div>
     当前可用文案仅剩 <strong>{{ total_active }}</strong> 条（不足阈值 {{ threshold }} 条），
     请 <strong>管理员尽快补充</strong>，以免他人无文案可复制。
@@ -25,50 +27,44 @@
 </div>
 {% endif %}
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-  <form class="d-flex flex-grow-1" method="get" action="{{ url_for('index') }}">
-    <div class="input-group">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" name="q" value="{{ q }}" class="form-control"
-             placeholder="搜索文案标题或内容…" aria-label="搜索">
-      {% if category %}
-      <input type="hidden" name="category" value="{{ category }}">
-      {% endif %}
-      <button class="btn btn-primary" type="submit">搜索</button>
-    </div>
-  </form>
-  <div class="text-muted small">共 <strong>{{ total_active }}</strong> 条可用</div>
-</div>
+<!-- Hero -->
+<section class="hero text-center text-white rounded-4 shadow-sm position-relative mb-4">
+  <div class="hero-bg"></div>
+  <div class="position-relative py-5 px-3">
+    <div class="hero-icon mb-3"><i class="bi bi-stars"></i></div>
+    <h1 class="fw-bold mb-1">{{ site_name }}</h1>
+    <p class="mb-4 opacity-75">精选文案 · 即点即复制 · 复制后自动下架</p>
+    <form class="search-wrap mx-auto" method="get" action="{{ url_for('index') }}">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text border-0 bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" value="{{ q }}" class="form-control border-0 shadow-none"
+               placeholder="搜索你需要的文案…" aria-label="搜索">
+        <button class="btn btn-light fw-semibold px-4" type="submit">搜索</button>
+      </div>
+    </form>
+  </div>
+</section>
 
-{% if categories %}
-<div class="mb-3 d-flex flex-wrap gap-1">
-  <a href="{{ url_for('index', q=q) }}"
-     class="badge rounded-pill text-decoration-none {% if not category %}bg-primary{% else %}bg-secondary bg-opacity-25 text-dark{% endif %} p-2">
-    全部
-  </a>
-  {% for c in categories %}
-  <a href="{{ url_for('index', q=q, category=c) }}"
-     class="badge rounded-pill text-decoration-none {% if category == c %}bg-primary{% else %}bg-secondary bg-opacity-25 text-dark{% endif %} p-2">
-    {{ c }}
-  </a>
-  {% endfor %}
+<!-- 列表标题 -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h5 class="section-title fw-bold mb-0"><i class="bi bi-collection me-1"></i>可复制文案</h5>
+  <span class="badge rounded-pill text-bg-light border px-3 py-2">共 {{ total_active }} 条</span>
 </div>
-{% endif %}
 
 {% if items %}
 <div class="row g-3" id="cardGrid">
   {% for it in items %}
   <div class="col-sm-6 col-lg-4 copy-card-wrap" data-id="{{ it.id }}">
     <div class="card h-100 copy-card border-0 shadow-sm">
-      <div class="card-body d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <h6 class="card-title fw-bold mb-0">{{ it.title }}</h6>
-          <span class="badge bg-info text-dark cat-badge">{{ it.category }}</span>
+      <div class="card-body d-flex flex-column p-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="doc-ico"><i class="bi bi-file-earmark-text"></i></span>
+          <h6 class="card-title fw-bold mb-0 text-truncate">{{ it.title }}</h6>
         </div>
         <p class="card-text copy-content text-secondary flex-grow-1">{{ it.content }}</p>
-        <button class="btn btn-outline-primary btn-sm mt-2 copy-btn"
+        <button class="btn btn-grad btn-sm rounded-3 mt-2 copy-btn"
                 data-id="{{ it.id }}" data-content="{{ it.content }}">
-          <i class="bi bi-clipboard me-1"></i>复制文案
+          <i class="bi bi-clipboard-check me-1"></i>一键复制
         </button>
       </div>
     </div>
@@ -76,16 +72,16 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="text-center text-muted py-5">
-  <i class="bi bi-inboxes" style="font-size:3rem"></i>
-  <p class="mt-3 mb-0">暂无可用文案</p>
+<div class="empty-state text-center py-5">
+  <div class="empty-ico mb-3"><i class="bi bi-inboxes"></i></div>
+  <h6 class="fw-bold mb-1">暂无可用文案</h6>
   {% if low_stock %}
-  <p class="small">文案库存不足，请联系管理员补充。</p>
+  <p class="text-muted small mb-0">文案库存不足，请联系管理员补充。</p>
   {% endif %}
 </div>
 {% endif %}
 
-<footer class="text-center mt-5">
+<footer class="text-center text-muted small mt-5 pt-3 border-top">
   {{ site_name }} · 复制成功后该文案将自动移除，避免重复领取
 </footer>
 {% endblock %}
@@ -95,7 +91,6 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 async function copyText(text) {
-  // 优先使用现代剪贴板 API，失败时回退到 execCommand
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
@@ -105,8 +100,7 @@ async function copyText(text) {
   try {
     const ta = document.createElement('textarea');
     ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.focus(); ta.select();
     const ok = document.execCommand('copy');
@@ -131,7 +125,6 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
     const id = btn.getAttribute('data-id');
     const content = btn.getAttribute('data-content');
-    // 复制前的确认提示
     if (!confirm('确定要复制这条文案吗？\n复制成功后该文案将从列表中移除，避免他人重复领取。')) {
       return;
     }
@@ -142,7 +135,6 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
       btn.disabled = false;
       return;
     }
-    // 复制成功，通知后端移除该文案
     try {
       const resp = await fetch(`/claim/${id}`, {
         method: 'POST',
@@ -153,7 +145,6 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
         const card = document.querySelector(`.copy-card-wrap[data-id="${id}"]`);
         if (card) card.remove();
         showToast('复制成功，文案已移除', 'success');
-        // 若列表已空，刷新页面以显示空状态与提示
         if (document.querySelectorAll('.copy-card-wrap').length === 0) {
           setTimeout(() => location.reload(), 600);
         }

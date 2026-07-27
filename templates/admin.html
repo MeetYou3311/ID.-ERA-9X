@@ -1,118 +1,170 @@
 {% extends "base.html" %}
 {% block title %}管理后台 · {{ site_name }}{% endblock %}
+
 {% block nav %}
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg topbar bg-white sticky-top">
   <div class="container">
-    <span class="navbar-brand mb-0 brand">
-      <i class="bi bi-shield-lock-fill text-warning me-1"></i>管理后台
+    <span class="navbar-brand fw-bold d-flex align-items-center gap-2 mb-0">
+      <span class="brand-logo"><i class="bi bi-shield-lock-fill"></i></span>
+      <span class="text-gradient">管理后台</span>
     </span>
-    <div>
-      <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2">查看前台</a>
-      <span class="text-light small me-2">{{ admin_user }}</span>
-      <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">退出</a>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-box-arrow-up-right me-1"></i>查看前台
+      </a>
+      <span class="text-muted small d-none d-sm-inline">{{ admin_user }}</span>
+      <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-grad rounded-pill px-3">
+        <i class="bi bi-box-arrow-right me-1"></i>退出
+      </a>
     </div>
   </div>
 </nav>
 {% endblock %}
 
 {% block content %}
-<!-- 统计卡片 -->
+<style>
+  .stat-card{ overflow:hidden; position:relative; }
+  .stat-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:5px; }
+  .stat-green::before{ background:linear-gradient(#16a34a,#22c55e); }
+  .stat-gray::before{ background:linear-gradient(#6366f1,#8b5cf6); }
+  .stat-indigo::before{ background:linear-gradient(#0ea5e9,#6366f1); }
+  .stat-ico{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:1.1rem; color:#fff; float:right; }
+  .stat-green .stat-ico{ background:linear-gradient(135deg,#16a34a,#22c55e); }
+  .stat-gray .stat-ico{ background:linear-gradient(135deg,#6366f1,#8b5cf6); }
+  .stat-indigo .stat-ico{ background:linear-gradient(135deg,#0ea5e9,#6366f1); }
+  .list-scroll{ max-height:420px; overflow:auto; }
+  .mini-card{ border:1px solid #eef0f4; border-radius:.9rem; transition:box-shadow .15s; }
+  .mini-card:hover{ box-shadow:0 .4rem 1rem rgba(79,70,229,.10); }
+  .bg-soft{ background:#f6f7fb; }
+</style>
+
+<!-- 统计 -->
 <div class="row g-3 mb-4">
   <div class="col-4">
-    <div class="card border-0 shadow-sm text-center">
-      <div class="card-body">
-        <div class="h3 mb-0 text-success">{{ stats.active }}</div>
-        <div class="small text-muted">可用</div>
+    <div class="card border-0 shadow-sm rounded-4 stat-card stat-green">
+      <div class="card-body"><div class="stat-ico"><i class="bi bi-check2-circle"></i></div>
+        <div class="h3 mb-0 fw-bold">{{ stats.active }}</div><div class="small text-muted">可用</div>
       </div>
     </div>
   </div>
   <div class="col-4">
-    <div class="card border-0 shadow-sm text-center">
-      <div class="card-body">
-        <div class="h3 mb-0 text-secondary">{{ stats.taken }}</div>
-        <div class="small text-muted">已领取</div>
+    <div class="card border-0 shadow-sm rounded-4 stat-card stat-gray">
+      <div class="card-body"><div class="stat-ico"><i class="bi bi-archive"></i></div>
+        <div class="h3 mb-0 fw-bold">{{ stats.taken }}</div><div class="small text-muted">已领取</div>
       </div>
     </div>
   </div>
   <div class="col-4">
-    <div class="card border-0 shadow-sm text-center">
-      <div class="card-body">
-        <div class="h3 mb-0">{{ stats.total }}</div>
-        <div class="small text-muted">累计导入</div>
+    <div class="card border-0 shadow-sm rounded-4 stat-card stat-indigo">
+      <div class="card-body"><div class="stat-ico"><i class="bi bi-stack"></i></div>
+        <div class="h3 mb-0 fw-bold">{{ stats.total }}</div><div class="small text-muted">累计导入</div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="row g-4">
-  <!-- 左：导入 -->
+  <!-- 左：导入 + 设置 -->
   <div class="col-lg-7">
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-bold"><i class="bi bi-upload me-1"></i>导入文案</div>
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-0 pt-3 pb-0">
+        <h6 class="fw-bold mb-0"><i class="bi bi-upload me-1 text-gradient"></i>导入文案</h6>
+      </div>
       <div class="card-body">
-        <ul class="nav nav-tabs mb-3" id="importTabs" role="tablist">
+        <ul class="nav nav-pills nav-fill mb-3 bg-soft p-1 rounded-3" id="importTabs" role="tablist">
           <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#batch" type="button">批量导入</button>
+            <button class="nav-link active rounded-3" data-bs-toggle="tab" data-bs-target="#batch" type="button">批量导入</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#single" type="button">单条添加</button>
+            <button class="nav-link rounded-3" data-bs-toggle="tab" data-bs-target="#single" type="button">单条添加</button>
           </li>
         </ul>
         <div class="tab-content">
+          <!-- 批量 -->
           <div class="tab-pane fade show active" id="batch">
-            <form method="post" action="{{ url_for('admin_import') }}">
+            <form method="post" action="{{ url_for('admin_import') }}" id="batchForm" enctype="multipart/form-data">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <input type="hidden" name="mode" value="batch">
-              <div class="mb-2">
-                <label class="form-label small">分类</label>
-                <input type="text" name="category" class="form-control form-control-sm" placeholder="如：升级码 / 客服话术 / 未分类" value="未分类">
+              <div class="row g-2 mb-3">
+                <div class="col-7">
+                  <label class="form-label small text-muted mb-1">统一分类（可选）</label>
+                  <input type="text" name="category" class="form-control form-control-sm" placeholder="如：升级码 / 客服话术 / 留空为未分类" value="未分类">
+                </div>
+                <div class="col-5">
+                  <label class="form-label small text-muted mb-1">从文件导入</label>
+                  <input type="file" name="file" id="batchFile" class="form-control form-control-sm" accept=".txt,.csv">
+                </div>
               </div>
               <div class="mb-2">
-                <label class="form-label small">每行一条文案（支持 <code>标题||内容</code> 格式）</label>
-                <textarea name="batch" class="form-control" rows="8" placeholder="直接粘贴多行内容，每行一条&#10;或使用：标题||具体内容"></textarea>
+                <label class="form-label small text-muted mb-1">
+                  粘贴文案（每行一条；支持 <code>标题&lt;Tab&gt;内容</code> 或 <code>标题||内容</code>，也可直接粘贴 Excel 整列）
+                </label>
+                <textarea name="batch" id="batchText" class="form-control" rows="8"
+                          placeholder="直接粘贴多行内容，每行一条&#10;或：标题||具体内容&#10;或从 Excel 复制后粘贴（Tab 分隔）"></textarea>
               </div>
-              <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-plus-lg me-1"></i>批量导入</button>
+              <div class="alert alert-light border rounded-3 small mb-3" id="batchPreview">将导入 <strong>0</strong> 条</div>
+              <button class="btn btn-grad btn-sm rounded-3 px-4" type="submit">
+                <i class="bi bi-upload me-1"></i>批量导入
+              </button>
             </form>
           </div>
+          <!-- 单条 -->
           <div class="tab-pane fade" id="single">
             <form method="post" action="{{ url_for('admin_import') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <input type="hidden" name="mode" value="single">
               <div class="row g-2 mb-2">
                 <div class="col-7">
-                  <label class="form-label small">标题</label>
+                  <label class="form-label small text-muted mb-1">标题</label>
                   <input type="text" name="title" class="form-control form-control-sm" placeholder="留空则自动截取内容前 20 字">
                 </div>
                 <div class="col-5">
-                  <label class="form-label small">分类</label>
+                  <label class="form-label small text-muted mb-1">分类</label>
                   <input type="text" name="category" class="form-control form-control-sm" value="未分类">
                 </div>
               </div>
               <div class="mb-2">
-                <label class="form-label small">内容</label>
+                <label class="form-label small text-muted mb-1">内容</label>
                 <textarea name="content" class="form-control" rows="4" placeholder="文案内容"></textarea>
               </div>
-              <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-plus-lg me-1"></i>添加</button>
+              <button class="btn btn-grad btn-sm rounded-3 px-4" type="submit">
+                <i class="bi bi-plus-lg me-1"></i>添加
+              </button>
             </form>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 不足阈值设置 -->
-    <div class="card border-0 shadow-sm mt-4">
+    <!-- 不足阈值 -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
       <div class="card-body">
         <form method="post" action="{{ url_for('admin_setting') }}" class="row g-2 align-items-end">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="col-auto">
-            <label class="form-label small mb-0">文案不足阈值（条）</label>
-            <input type="number" name="threshold" min="0" class="form-control form-control-sm"
-                   style="width:7rem" value="{{ threshold }}">
+            <label class="form-label small text-muted mb-1">文案不足阈值（条）</label>
+            <input type="number" name="threshold" min="0" class="form-control form-control-sm" style="width:7rem" value="{{ threshold }}">
           </div>
           <div class="col-auto">
-            <button class="btn btn-outline-secondary btn-sm" type="submit">保存</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-3" type="submit">保存</button>
           </div>
-          <div class="col-auto small text-muted">剩余可用 ≤ 该值时，前台显示“文案不足”提示</div>
+          <div class="col-auto small text-muted">剩余可用 ≤ 该值时，前台显示"文案不足"提示</div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 改密码 -->
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin_change_password') }}" class="row g-2 align-items-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="col-auto">
+            <label class="form-label small text-muted mb-1">修改管理员密码</label>
+            <input type="password" name="new_password" minlength="6" class="form-control form-control-sm" style="width:14rem" placeholder="至少 6 位">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary btn-sm rounded-3" type="submit">更新</button>
+          </div>
         </form>
       </div>
     </div>
@@ -120,71 +172,102 @@
 
   <!-- 右：列表 -->
   <div class="col-lg-5">
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white fw-bold d-flex justify-content-between">
-        <span><i class="bi bi-list-check me-1"></i>可用文案（{{ active|length }}）</span>
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-collection me-1 text-gradient"></i>可用文案</h6>
+        <span class="badge rounded-pill text-bg-light border">{{ active|length }}</span>
       </div>
-      <ul class="list-group list-group-flush" style="max-height:420px;overflow:auto">
+      <div class="card-body list-scroll">
         {% for it in active %}
-        <li class="list-group-item">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="me-2" style="min-width:0">
+        <div class="mini-card p-3 mb-2">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div style="min-width:0">
               <div class="fw-bold small text-truncate">{{ it.title }}</div>
               <div class="text-muted small text-truncate">{{ it.content }}</div>
-              <span class="badge bg-info text-dark cat-badge">{{ it.category }}</span>
             </div>
             <form method="post" action="{{ url_for('admin_delete', item_id=it.id) }}" class="flex-shrink-0">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button class="btn btn-outline-danger btn-sm" type="submit" title="删除"
-                      onclick="return confirm('确定删除该文案？')">
+              <button class="btn btn-outline-danger btn-sm rounded-3" type="submit" title="删除" onclick="return confirm('确定删除该文案？')">
                 <i class="bi bi-trash"></i>
               </button>
             </form>
           </div>
-        </li>
+        </div>
         {% else %}
-        <li class="list-group-item text-muted small">暂无可用文案</li>
+        <p class="text-muted small text-center py-3 mb-0">暂无可用文案</p>
         {% endfor %}
-      </ul>
+      </div>
     </div>
 
-    <div class="card border-0 shadow-sm mt-4">
-      <div class="card-header bg-white fw-bold"><i class="bi bi-archive me-1"></i>已领取（{{ taken|length }}）</div>
-      <ul class="list-group list-group-flush" style="max-height:320px;overflow:auto">
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+      <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-archive me-1 text-gradient"></i>已领取</h6>
+        <span class="badge rounded-pill text-bg-light border">{{ taken|length }}</span>
+      </div>
+      <div class="card-body list-scroll">
         {% for it in taken %}
-        <li class="list-group-item">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="me-2" style="min-width:0">
+        <div class="mini-card p-3 mb-2">
+          <div class="d-flex justify-content-between align-items-center gap-2">
+            <div style="min-width:0">
               <div class="small text-truncate">{{ it.title }}</div>
               <div class="text-muted" style="font-size:.75rem">{{ it.taken_at }}</div>
             </div>
             <form method="post" action="{{ url_for('admin_restore', item_id=it.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button class="btn btn-outline-secondary btn-sm" type="submit" title="恢复为可领取">恢复</button>
+              <button class="btn btn-outline-secondary btn-sm rounded-3" type="submit" title="恢复为可领取">恢复</button>
             </form>
           </div>
-        </li>
+        </div>
         {% else %}
-        <li class="list-group-item text-muted small">暂无领取记录</li>
+        <p class="text-muted small text-center py-3 mb-0">暂无领取记录</p>
         {% endfor %}
-      </ul>
+      </div>
     </div>
   </div>
 </div>
+{% endblock %}
 
-<!-- 修改密码 -->
-<div class="card border-0 shadow-sm mt-4">
-  <div class="card-body">
-    <form method="post" action="{{ url_for('admin_change_password') }}" class="row g-2 align-items-end">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <div class="col-auto">
-        <label class="form-label small mb-0">修改管理员密码</label>
-        <input type="password" name="new_password" minlength="6" class="form-control form-control-sm" style="width:14rem" placeholder="至少 6 位">
-      </div>
-      <div class="col-auto">
-        <button class="btn btn-outline-secondary btn-sm" type="submit">更新</button>
-      </div>
-    </form>
-  </div>
-</div>
+{% block scripts %}
+<script>
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function parseBatch(raw){
+  const items=[];
+  raw.split(/\r?\n/).forEach(line=>{
+    line=line.trim();
+    if(!line) return;
+    let title='', content=line;
+    if(line.includes('\t')){ [title,content]=line.split('\t'); }
+    else if(line.includes('||')){ [title,content]=line.split('||'); }
+    title=(title||'').trim(); content=(content||'').trim();
+    if(!content) return;
+    if(!title) title=content.slice(0,20);
+    items.push({title,content});
+  });
+  return items;
+}
+function updatePreview(){
+  const raw=document.getElementById('batchText').value + (window.__fileRaw ? ('\n'+window.__fileRaw) : '');
+  const items=parseBatch(raw);
+  const box=document.getElementById('batchPreview');
+  if(items.length===0){ box.innerHTML='将导入 <strong>0</strong> 条'; return; }
+  let html='将导入 <strong>'+items.length+'</strong> 条 · 预览：<div class="mt-2 d-flex flex-wrap gap-1">';
+  items.slice(0,8).forEach(it=>{
+    const label=(it.title||it.content.slice(0,12));
+    html+='<span class="badge rounded-pill text-bg-light border">'+escapeHtml(label)+'</span>';
+  });
+  if(items.length>8) html+='<span class="badge rounded-pill text-bg-light border">…</span>';
+  html+='</div>';
+  box.innerHTML=html;
+}
+document.getElementById('batchText').addEventListener('input', updatePreview);
+document.getElementById('batchFile').addEventListener('change', function(){
+  const f=this.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{ window.__fileRaw=ev.target.result; updatePreview(); };
+  r.readAsText(f);
+});
+updatePreview();
+</script>
 {% endblock %}

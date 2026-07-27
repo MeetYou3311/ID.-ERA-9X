@@ -235,6 +235,29 @@ def admin_dashboard():
     )
 
 
+def _parse_batch(raw):
+    """把批量文本解析为 (title, content) 列表。
+    支持格式：每行一条；可用 Tab 或 '||' 分隔 标题与内容；否则整行作内容、标题取前 20 字。"""
+    items = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if "\t" in line:
+            title, _, content = line.partition("\t")
+        elif "||" in line:
+            title, _, content = line.partition("||")
+        else:
+            title, content = "", line
+        title, content = title.strip(), content.strip()
+        if not content:
+            continue
+        if not title:
+            title = content[:20]
+        items.append((title, content))
+    return items
+
+
 @app.route("/admin/import", methods=["POST"])
 @admin_login_required
 def admin_import():
@@ -247,19 +270,10 @@ def admin_import():
 
     if mode == "batch":
         raw = request.form.get("batch", "")
-        for line in raw.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            # 支持 "标题||内容" 格式，否则整行作为内容、标题取前 20 字
-            if "||" in line:
-                title, content = line.split("||", 1)
-                title, content = title.strip(), content.strip()
-            else:
-                content = line
-                title = content[:20]
-            if not content:
-                continue
+        f = request.files.get("file")
+        if f and f.filename:
+            raw = (f.read() or b"").decode("utf-8", errors="ignore")
+        for title, content in _parse_batch(raw):
             db.execute(
                 "INSERT INTO copy (title, category, content, status, created_at, taken_at) "
                 "VALUES (?, ?, ?, 'active', ?, NULL)",

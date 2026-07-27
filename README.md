@@ -64,3 +64,32 @@ python3 app.py
   ```
 - **HTTPS**：浏览器的剪贴板 API 在 `https` 或 `localhost` 下才可用；非 localhost 的 http 环境会自动回退到 `execCommand` 复制方案。部署到公网请启用 HTTPS。
 - 文案被领取后仅从前台列表移除（标记为 `taken`），管理员可在后台查看「已领取」记录并恢复，不会真正丢失数据。
+
+---
+
+## 方案 B：本机长期运行（无需任何云平台账号）
+
+适合不想注册 GitHub / Render，又想让别人长期访问的场景。原理：在你的设备（电脑 / 小主机 / 树莓派）上常驻运行本应用，再用**免费隧道**把 `5000` 端口暴露到公网。
+
+### 步骤
+1. 在本机安装 Python 3.11+，并安装隧道客户端：
+   - **cloudflared**（推荐，无需账号即可用临时隧道）：
+     - Mac：`brew install cloudflared`
+     - Windows：`winget install Cloudflare.cloudflared`
+     - Linux：见 [官方文档](https://developers.cloudflare.com/cloudflared/get-started/)
+   - 或 **ngrok**（免费账号可拿到固定子域名）：`winget install ngrok` / `brew install ngrok`，再 `ngrok config add-authtoken <你的token>`
+2. 启动并开隧道（一键脚本，Mac/Linux）：
+   ```bash
+   bash start_with_tunnel.sh
+   ```
+   Windows 则分两步：先 `python app.py`，另开一个终端执行 `cloudflared tunnel --url http://localhost:5000`。
+3. 终端会打印一个 `https://xxxx.trycloudflare.com` 的公网地址，把它发给别人即可访问。
+
+### 关于「固定链接」
+- **cloudflared 临时隧道**：每次重启 URL 都会变，需重新发送。
+- **想要固定不变**：
+  - cloudflared「命名隧道」（免费 Cloudflare 账号）：`cloudflared tunnel create <名>` → `cloudflared tunnel route dns <名> <子域>` → 用 `cloudflared tunnel run <名>` 常驻。
+  - 或 ngrok 免费账号配置固定子域名：`ngrok http --url=你的名字.ngrok-free.app 5000`。
+- 想完全自己掌控、URL 永不变：在路由器做端口转发 + 域名（DDNS），或用上面的云部署方案。
+
+> 注意：本机方案依赖你的设备保持开机且网络连通；关机或断网时链接失效。若需「无人值守长期稳定」，优先选方案 A（云部署）。
