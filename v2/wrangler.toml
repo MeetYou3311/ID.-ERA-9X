@@ -1,0 +1,10 @@
+name = "era9x-claims"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# 跨用户领取计数用的 KV 命名空间
+# 部署前先执行：wrangler kv namespace create CLAIM_KV
+# 把返回的 id 填到下面的 id 字段
+[[kv_namespaces]]
+binding = "CLAIM_KV"
+id = "REPLACE_WITH_YOUR_KV_ID"

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ID. ERA 9X 软件升级分享 · 跨用户版</title>
+<style>
+:root{--brand-1:#6366f1;--brand-2:#8b5cf6;--brand-3:#ec4899;--brand-grad:linear-gradient(135deg,#6366f1,#8b5cf6 45%,#ec4899);--ink:#1f2138;--ink-soft:#5b5f7b;--bg:#f5f6fb;--line:#ececf5;--card:#fff;--shadow:0 14px 40px -18px rgba(76,49,128,.35);--radius:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+.hero{padding:46px 22px 26px;text-align:center;background:radial-gradient(120% 120% at 50% 0%,rgba(139,92,246,.10),transparent 60%)}
+.hero h1{margin:0;font-size:30px;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.hero p{color:var(--ink-soft);margin:12px auto 0;max-width:640px;line-height:1.7;font-size:14.5px}
+.wrap{max-width:1080px;margin:0 auto;padding:8px 22px 80px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow)}
+.stat .num{font-size:26px;font-weight:800;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--ink-soft);font-size:12.5px;margin-top:3px}
+.banner{display:none;background:linear-gradient(135deg,#fff7ed,#fef2f2);border:1px solid #fed7aa;color:#9a3412;border-radius:14px;padding:13px 16px;font-size:13.5px;line-height:1.7;margin-bottom:18px}
+.banner.show{display:block}
+.banner b{color:#c2410c}
+.mode{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;font-weight:600;margin-left:8px;vertical-align:middle}
+.mode.on{background:rgba(16,185,129,.12);color:#047857}
+.mode.off{background:rgba(148,163,184,.16);color:#64748b}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.card .t{font-weight:800;font-size:15px;color:var(--brand-2);margin-bottom:8px}
+.card .x{font-size:13.5px;color:var(--ink);white-space:pre-wrap;word-break:break-word;line-height:1.7;flex:1}
+.card .meta{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
+.remain{font-size:12.5px;color:var(--ink-soft)}
+.remain b{color:var(--brand-2);font-size:15px}
+.btn{border:none;cursor:pointer;font-size:14px;font-weight:700;padding:10px 16px;border-radius:12px;background:var(--brand-grad);color:#fff;box-shadow:0 10px 24px -8px rgba(139,92,246,.6);transition:transform .12s,filter .12s}
+.btn:active{transform:scale(.97)}
+.btn:hover{filter:brightness(1.05)}
+.btn:disabled{background:#e5e7eb;color:#9ca3af;box-shadow:none;cursor:not-allowed}
+.tag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+.tag.done{background:#dcfce7;color:#15803d}
+.tag.empty{background:#fee2e2;color:#b91c1c}
+.note{color:var(--ink-soft);font-size:12.5px;line-height:1.8;margin-top:26px;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(31,33,56,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal.show{opacity:1;pointer-events:auto}
+.modal .box{background:#fff;border-radius:18px;padding:24px;max-width:420px;text-align:center;box-shadow:0 30px 80px -20px rgba(31,33,56,.5)}
+.modal h3{margin:0 0 10px;font-size:18px}
+.modal p{color:var(--ink-soft);font-size:13.5px;line-height:1.7;margin:0 0 16px;white-space:pre-wrap;max-height:200px;overflow:auto;text-align:left;background:#f8f8fd;border-radius:10px;padding:12px}
+.modal .row{display:flex;gap:10px}
+.modal .row>*{flex:1}
+.toast{position:fixed;left:50%;bottom:36px;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 16px 40px -12px rgba(0,0,0,.5);opacity:0;transition:transform .3s,opacity .3s;z-index:40}
+.toast.show{transform:translate(-50%,0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>ID. ERA 9X 软件升级分享</h1>
+  <p>挑你需要的文案，点击复制即可使用。复制后该条在本机归档；库存由全网共享计数统一管理，避免多人重复领取。<span id="modeTag" class="mode off">跨用户计数：未启用</span></p>
+</div>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">可用文案</div></div>
+    <div class="stat"><div class="num" id="stEmpty">0</div><div class="lbl">已领完</div></div>
+    <div class="stat"><div class="num" id="stClaimed">0</div><div class="lbl">全网累计领取</div></div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+  <div class="grid" id="grid"></div>
+
+  <p class="note">
+    本页为「方案 B / 跨用户版」演示：文案复用现有 <code>data.json</code>（仍由后台 admin.html 管理），<br>
+    跨用户的「已领数量」存储在 Cloudflare KV，通过无服务器 Worker 读写，公开页面不含任何写权限。
+  </p>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>已复制到剪贴板</h3>
+    <p id="modalText"></p>
+    <div class="row">
+      <button class="btn" id="modalCopy">再复制一次</button>
+      <button class="btn" style="background:rgba(99,102,241,.12);color:var(--brand-2);box-shadow:none" id="modalClose">完成</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">已保存</div>
+
+<script>
+/* ============ 配置 ============ */
+// 部署 Cloudflare Worker 后，把它的地址填到下面（例如 https://era9x-claims.xxxx.workers.dev）
+// 留空则自动降级为「仅本机去重」，页面仍可正常使用。
+var WORKER_URL = "";
+// 复用现有文案数据（由 admin.html 管理，不重复造数据）
+var DATA_URL = "/data.json";
+var CLAIM_KEY = "era9x_claimed_v2";
+
+var COPY_DATA = [];
+var SETTINGS = { lowStockThreshold: 10, defaultStock: 100 };
+var CLAIMS = {};          // id -> 全网已领数量
+var modeOn = false;
+
+/* ============ 工具 ============ */
+function getLocalClaimed(){ try{ return JSON.parse(localStorage.getItem(CLAIM_KEY)||"[]"); }catch(e){ return []; } }
+function addLocalClaimed(id){ var a=getLocalClaimed(); if(a.indexOf(id)<0){a.push(id); localStorage.setItem(CLAIM_KEY, JSON.stringify(a));} }
+function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2000); }
+
+/* ============ 数据 ============ */
+function loadData(){
+  fetch(DATA_URL, {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("数据加载失败 "+r.status); return r.json(); })
+    .then(function(obj){
+      COPY_DATA = obj.COPY_DATA || [];
+      SETTINGS = Object.assign(SETTINGS, obj.COPY_SETTINGS || {});
+      if(WORKER_URL){ loadClaims(); } else { render(); }
+    })
+    .catch(function(e){ document.getElementById("grid").innerHTML = '<p style="color:#b91c1c">加载失败：'+e.message+'</p>'; });
+}
+function loadClaims(){
+  fetch(WORKER_URL.replace(/\/$/,"") + "/counts", {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("计数服务 "+r.status); return r.json(); })
+    .then(function(map){ CLAIMS = map||{}; modeOn=true; document.getElementById("modeTag").className="mode on"; document.getElementById("modeTag").textContent="跨用户计数：已启用"; render(); })
+    .catch(function(){ modeOn=false; document.getElementById("modeTag").className="mode off"; document.getElementById("modeTag").textContent="跨用户计数：未启用"; render(); });
+}
+
+/* ============ 计算 ============ */
+function stockOf(it){ return (typeof it.stock === "number" && it.stock > 0) ? it.stock : SETTINGS.defaultStock; }
+function hasStock(it){ return typeof it.stock === "number" && it.stock > 0; }
+function claimedOf(id){ return CLAIMS[id] || 0; }
+function remainingOf(it){ return Math.max(0, stockOf(it) - claimedOf(it.id)); }
+function isLocalTaken(id){ return getLocalClaimed().indexOf(id) >= 0; }
+
+/* ============ 渲染 ============ */
+function render(){
+  var grid = document.getElementById("grid"); grid.innerHTML="";
+  var emptyCount=0, totalClaimed=0;
+  COPY_DATA.forEach(function(it){
+    totalClaimed += claimedOf(it.id);
+    var rem = remainingOf(it);
+    var localTaken = isLocalTaken(it.id);
+    var depleted = hasStock(it) && rem<=0;
+    if(depleted) emptyCount++;
+
+    var card = document.createElement("div"); card.className="card";
+    var t = document.createElement("div"); t.className="t"; t.textContent = it.title || "（无标题）"; card.appendChild(t);
+    var x = document.createElement("div"); x.className="x"; x.textContent = it.content; card.appendChild(x);
+
+    var meta = document.createElement("div"); meta.className="meta";
+    var remHtml = hasStock(it)
+      ? '剩余 <b>'+rem+'</b> / 共 '+stockOf(it)
+      : '不限量' + (modeOn ? '（已领 '+claimedOf(it.id)+'）' : '');
+    var remEl = document.createElement("div"); remEl.className="remain"; remEl.innerHTML = remHtml; meta.appendChild(remEl);
+
+    var btn = document.createElement("button"); btn.className="btn";
+    if(depleted){ btn.textContent="已领完"; btn.disabled=true; }
+    else if(localTaken){ btn.textContent="已领取"; btn.disabled=true; }
+    else { btn.textContent="复制"; btn.addEventListener("click", function(){ doCopy(it); }); }
+    meta.appendChild(btn);
+    card.appendChild(meta);
+
+    if(depleted){ var tag=document.createElement("span"); tag.className="tag empty"; tag.textContent="已领完"; card.querySelector(".t").appendChild(tag); }
+    else if(localTaken){ var tag2=document.createElement("span"); tag2.className="tag done"; tag2.textContent="本机已领"; card.querySelector(".t").appendChild(tag2); }
+
+    grid.appendChild(card);
+  });
+
+  document.getElementById("stTotal").textContent = COPY_DATA.length;
+  document.getElementById("stEmpty").textContent = emptyCount;
+  document.getElementById("stClaimed").textContent = totalClaimed;
+
+  // 低库存预警（跨用户）
+  var low = COPY_DATA.filter(function(it){ return hasStock(it) && remainingOf(it)>0 && remainingOf(it) <= (SETTINGS.lowStockThreshold||0); });
+  var banner = document.getElementById("banner");
+  if(low.length){
+    banner.className="banner show";
+    banner.innerHTML = "⚠️ <b>低库存提醒</b>：以下文案剩余不多，请尽快补充 —— " + low.map(function(it){ return "《"+(it.title||"无标题")+"》剩 "+remainingOf(it); }).join("；");
+  } else { banner.className="banner"; }
+}
+
+/* ============ 复制 ============ */
+function doCopy(it){
+  var text = it.content;
+  navigator.clipboard.writeText(text).then(function(){ showModal(text); }).catch(function(){
+    // 降级方案
+    var ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); showModal(text); }catch(e){ alert("复制失败，请手动复制"); }
+    document.body.removeChild(ta);
+  });
+  addLocalClaimed(it.id);
+  if(modeOn){
+    fetch(WORKER_URL.replace(/\/$/,"") + "/claim", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({id:it.id})})
+      .then(function(r){ return r.json(); }).then(function(j){ if(j && typeof j.claimed==="number"){ CLAIMS[it.id]=j.claimed; } render(); })
+      .catch(function(){ render(); });
+  } else {
+    render();
+  }
+}
+
+/* ============ 弹窗 ============ */
+var modal=document.getElementById("modal");
+function showModal(text){ document.getElementById("modalText").textContent=text; modal.classList.add("show"); }
+document.getElementById("modalClose").addEventListener("click", function(){ modal.classList.remove("show"); });
+document.getElementById("modalCopy").addEventListener("click", function(){ var t=document.getElementById("modalText").textContent; navigator.clipboard.writeText(t).then(function(){ toast("已复制"); }); });
+modal.addEventListener("click", function(e){ if(e.target===modal) modal.classList.remove("show"); });
+
+/* ============ 启动 ============ */
+loadData();
+</script>
+</body>
+</html>
