@@ -54,6 +54,28 @@ body::after{width:460px;height:460px;background:radial-gradient(circle,#ec4899,t
 .toast.show{transform:translate(-50%,0);opacity:1}
 .footer-tip{text-align:center;color:var(--ink-soft);font-size:12.5px;margin-top:40px;line-height:1.7}
 .link-btn{background:none;border:none;color:var(--brand-2);cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0}
+/* ===== 管理员 ===== */
+.admin-shell{max-width:780px}
+.admin-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);backdrop-filter:blur(10px);margin:22px auto;max-width:780px}
+.admin-card h2{margin:0 0 6px;font-size:19px}
+.admin-card .hint{color:var(--ink-soft);font-size:13px;margin:0 0 16px}
+textarea,input[type=text],input[type=password]{width:100%;border-radius:12px;border:1px solid rgba(99,102,241,.18);background:#fff;padding:13px 14px;font-size:14px;font-family:inherit;color:var(--ink);outline:none;resize:vertical}
+textarea:focus,input:focus{border-color:var(--brand-2);box-shadow:0 0 0 4px rgba(139,92,246,.12)}
+textarea{min-height:150px;line-height:1.7}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1 1 200px}
+.field-label{font-size:13px;font-weight:600;color:var(--ink-soft);margin:14px 0 6px}
+.mini-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.mini-item{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #ececf5;border-radius:12px;padding:12px 14px}
+.mini-item .mi-body{flex:1;min-width:0}
+.mini-item .mi-title{font-weight:700;font-size:13px;color:var(--brand-2);margin-bottom:4px}
+.mini-item .mi-text{font-size:13px;color:var(--ink);white-space:pre-wrap;word-break:break-word;max-height:80px;overflow:auto}
+.mini-item .mi-del{border:none;background:#ffe3ec;color:#e11d48;width:30px;height:30px;border-radius:9px;cursor:pointer;flex:none;font-size:16px}
+.mini-item .mi-del:hover{background:#ffd0df}
+.note{background:linear-gradient(135deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;border-radius:14px;padding:14px 16px;font-size:13px;color:var(--ink-soft);line-height:1.7;margin-top:14px}
+.note b{color:var(--brand-2)}
+.lock-screen{max-width:380px;margin:60px auto}
+#adminView{display:none}
 </style>
 </head>
 <body>
@@ -86,9 +108,12 @@ body::after{width:460px;height:460px;background:radial-gradient(circle,#ec4899,t
   <div class="footer-tip">
     复制即视为已领取，本机将不再显示该条。<br />
     <button class="link-btn" id="resetBtn">重置本机已领取记录（仅影响你自己）</button>
+    <span> · </span>
+    <button class="link-btn" id="openAdmin">管理员入口</button>
   </div>
 </div>
 
+<!-- 复制确认弹窗 -->
 <div class="modal-backdrop" id="modal">
   <div class="modal">
     <h3>📋 确认复制这条文案？</h3>
@@ -100,18 +125,76 @@ body::after{width:460px;height:460px;background:radial-gradient(circle,#ec4899,t
   </div>
 </div>
 
+<!-- 管理员：登录锁 -->
+<div class="modal-backdrop" id="lock">
+  <div class="modal" style="max-width:380px">
+    <h3>🔐 管理员登录</h3>
+    <p class="hint">输入密码进入管理界面（用于导入新文案）。</p>
+    <input type="password" id="pwInput" placeholder="请输入管理员密码" />
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-primary" id="pwBtn">进入</button>
+    </div>
+    <p class="hint" style="margin-top:14px">默认密码：admin123（可在源文件 ADMIN_PASSWORD 修改）。</p>
+  </div>
+</div>
+
+<!-- 管理员：主界面 -->
+<div class="wrap admin-shell" id="adminView">
+  <div class="admin-card">
+    <h2>① 批量导入</h2>
+    <p class="hint">每行一条。纯文本=正文；用 <b>Tab</b> 或 <b>||</b> 分隔时，前半为标题、后半为正文。</p>
+    <textarea id="batchText" placeholder="示例：&#10;升级前须知	升级前请确认车辆已熄火并 P 档，电量高于 20%&#10;新版本亮点 || 本次升级带来语音更快、导航更准"></textarea>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-primary" id="parseBtn">解析预览</button>
+      <button class="btn btn-ghost" id="clearBatch">清空</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>② 单条添加</h2>
+    <div class="field-label">标题（可选）</div>
+    <input type="text" id="singleTitle" placeholder="如：升级前须知" />
+    <div class="field-label">正文</div>
+    <textarea id="singleContent" style="min-height:90px" placeholder="文案内容…"></textarea>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-primary" id="addSingle">添加到列表</button>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <h2>③ 当前文案列表（<span id="listCount">0</span> 条）</h2>
+    <p class="hint">点击 ✕ 可移除。下面是站内现有全部文案。</p>
+    <div class="mini-list" id="miniList"></div>
+  </div>
+
+  <div class="admin-card">
+    <h2>④ 导出并发布</h2>
+    <p class="hint">点「导出 index.html」下载更新后的整站文件，把它发给我（或自行提交到 GitHub）即可生效。当前部署为 GitHub Pages，更新后约 1–2 分钟自动刷新。</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="exportBtn">导出 index.html</button>
+      <button class="btn btn-ghost" id="refreshPublic">刷新前台显示</button>
+    </div>
+    <div class="note">
+      <b>说明：</b>静态站无后端，管理界面只能在你本机生成新文件。真正"只有你能导入"来自：① 公开站无自动写库；② 发布需要你的仓库权限/让我来推。密码为前端软校验，仅作入口区分。
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">✅ 已复制</div>
 
 <script>
-/* ===== 文案数据（已内联） ===== */
+/*__COPY_DATA_START__*/
 var COPY_DATA = [
-  { id:"seed-1", title:"升级前须知", content:"升级前请确认车辆已熄火并处于 P 档，电量高于 20%。升级过程约 8-12 分钟，期间请勿操作车机或断电，避免升级失败。" },
-  { id:"seed-2", title:"新版本亮点", content:"本次 9X 软件升级带来：①语音助手响应更快；②导航车道级引导；③自动泊车识别更准；④新增灯光秀模式。建议尽快完成升级体验。" },
-  { id:"seed-3", title:"升级后设置", content:"升级完成后建议重启一次车机：长按音量旋钮 10 秒。随后在「设置-系统-关于」中确认版本号已更新，并重新登录你的账户。" },
-  { id:"seed-4", title:"常见问题-卡在进度条", content:"若升级界面卡在 99% 超过 15 分钟，请耐心等待，勿强制断电。如仍无反应，长按方向盘 Home 键 15 秒强制重启车机即可继续。" },
-  { id:"seed-5", title:"邀请话术", content:"您的 ID. ERA 9X 已推送新版本软件，建议本周内完成升级，体验更顺滑的语音与导航。升级入口：车机「设置-系统-软件更新」。" }
+  { "id":"seed-1", "title":"升级前须知", "content":"升级前请确认车辆已熄火并处于 P 档，电量高于 20%。升级过程约 8-12 分钟，期间请勿操作车机或断电，避免升级失败。" },
+  { "id":"seed-2", "title":"新版本亮点", "content":"本次 9X 软件升级带来：①语音助手响应更快；②导航车道级引导；③自动泊车识别更准；④新增灯光秀模式。建议尽快完成升级体验。" },
+  { "id":"seed-3", "title":"升级后设置", "content":"升级完成后建议重启一次车机：长按音量旋钮 10 秒。随后在「设置-系统-关于」中确认版本号已更新，并重新登录你的账户。" },
+  { "id":"seed-4", "title":"常见问题-卡在进度条", "content":"若升级界面卡在 99% 超过 15 分钟，请耐心等待，勿强制断电。如仍无反应，长按方向盘 Home 键 15 秒强制重启车机即可继续。" },
+  { "id":"seed-5", "title":"邀请话术", "content":"您的 ID. ERA 9X 已推送新版本软件，建议本周内完成升级，体验更顺滑的语音与导航。升级入口：车机「设置-系统-软件更新」。" }
 ];
 var COPY_SETTINGS = { lowStockThreshold: 10 };
+/*__COPY_DATA_END__*/
+
+var ADMIN_PASSWORD = "admin123"; /* 可在此修改 */
 
 /* ===== 公开页逻辑 ===== */
 (function(){
@@ -194,7 +277,105 @@ var COPY_SETTINGS = { lowStockThreshold: 10 };
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&modal.classList.contains("show"))closeModal()});
   document.getElementById("resetBtn").addEventListener("click",function(){if(confirm("确定重置本机已领取记录？这会让所有文案重新显示（仅影响你这台设备）。")){localStorage.removeItem(CLAIM_KEY);render();showToast("已重置本机记录")}});
 
+  window.__renderPublic=render;
+  window.__getData=function(){return COPY_DATA;};
+  window.__setData=function(arr){COPY_DATA=arr;data=COPY_DATA.slice();render();};
   render();
+})();
+
+/* ===== 管理员逻辑 ===== */
+(function(){
+  "use strict";
+  var lock=document.getElementById("lock");
+  var adminView=document.getElementById("adminView");
+  var seq=0;
+
+  function parseBatch(raw){
+    var lines=(raw||"").split(/\r?\n/);var out=[];
+    lines.forEach(function(line){
+      line=line.trim();if(!line)return;
+      var sep=line.indexOf("\t")!==-1?"\t":(line.indexOf("||")!==-1?"||":null);
+      if(sep){
+        var parts=line.split(sep).map(function(s){return s.trim()});
+        var title=parts.shift()||"";
+        var content=parts.join(sep==="\t"?" ":"||").trim();
+        out.push({title:title,content:content});
+      }else{out.push({title:"",content:line});}
+    });
+    return out;
+  }
+
+  document.getElementById("openAdmin").addEventListener("click",function(){lock.classList.add("show");document.getElementById("pwInput").focus();});
+  document.getElementById("pwBtn").addEventListener("click",function(){
+    if(document.getElementById("pwInput").value===ADMIN_PASSWORD){
+      sessionStorage.setItem("era9x_admin","1");
+      unlock();
+    }else{alert("密码错误");}
+  });
+  document.getElementById("pwInput").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("pwBtn").click();});
+  function unlock(){
+    lock.classList.remove("show");
+    adminView.style.display="block";
+    renderList();
+  }
+
+  document.getElementById("parseBtn").addEventListener("click",function(){
+    parseBatch(document.getElementById("batchText").value).forEach(function(p){addItem(p.title,p.content);});
+    document.getElementById("batchText").value="";
+    renderList();
+  });
+  document.getElementById("clearBatch").addEventListener("click",function(){document.getElementById("batchText").value="";});
+  document.getElementById("addSingle").addEventListener("click",function(){
+    var t=document.getElementById("singleTitle").value.trim();
+    var c=document.getElementById("singleContent").value.trim();
+    if(!c){alert("正文不能为空");return;}
+    addItem(t,c);
+    document.getElementById("singleTitle").value="";
+    document.getElementById("singleContent").value="";
+    renderList();
+  });
+
+  function addItem(title,content){
+    seq+=1;
+    COPY_DATA.push({id:"c"+Date.now()+"-"+seq,title:title||"",content:content});
+  }
+
+  var miniList=document.getElementById("miniList");
+  function renderList(){
+    document.getElementById("listCount").textContent=COPY_DATA.length;
+    miniList.innerHTML="";
+    if(COPY_DATA.length===0){miniList.innerHTML='<p class="hint">还没有文案，先批量导入或单条添加。</p>';return;}
+    COPY_DATA.forEach(function(it,idx){
+      var row=document.createElement("div");row.className="mini-item";
+      var body=document.createElement("div");body.className="mi-body";
+      if(it.title){var tt=document.createElement("div");tt.className="mi-title";tt.textContent=it.title;body.appendChild(tt);}
+      var tx=document.createElement("div");tx.className="mi-text";tx.textContent=it.content;body.appendChild(tx);
+      var del=document.createElement("button");del.className="mi-del";del.textContent="✕";
+      del.addEventListener("click",function(){COPY_DATA.splice(idx,1);renderList();});
+      row.appendChild(body);row.appendChild(del);miniList.appendChild(row);
+    });
+  }
+
+  document.getElementById("refreshPublic").addEventListener("click",function(){
+    window.__setData(COPY_DATA.slice());
+    showToast2("已刷新前台显示");
+  });
+
+  document.getElementById("exportBtn").addEventListener("click",function(){
+    var html=document.documentElement.outerHTML;
+    var dataBlock="/*__COPY_DATA_START__*/\nvar COPY_DATA = "+JSON.stringify(COPY_DATA,null,2)+";\nvar COPY_SETTINGS = "+JSON.stringify(COPY_SETTINGS,null,2)+";\n/*__COPY_DATA_END__*/";
+    html=html.replace(/\/\*__COPY_DATA_START__\*\/[\s\S]*?\/\*__COPY_DATA_END__\*\//, dataBlock);
+    var blob=new Blob([html],{type:"text/html"});
+    var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="index.html";a.click();
+    URL.revokeObjectURL(a.href);
+    showToast2("已导出 index.html，发我发布即可");
+  });
+
+  var toast2El=document.getElementById("toast");
+  function showToast2(msg){toast2El.textContent=msg;toast2El.classList.add("show");setTimeout(function(){toast2El.classList.remove("show")},2200);}
+
+  // 回车也能关登录锁
+  lock.addEventListener("click",function(e){if(e.target===lock)lock.classList.remove("show");});
 })();
 </script>
 </body>
