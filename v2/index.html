@@ -89,7 +89,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 // 留空则自动降级为「仅本机去重」，页面仍可正常使用。
 var WORKER_URL = "";
 // 复用现有文案数据（由 admin.html 管理，不重复造数据）
-var DATA_URL = "/data.json";
+// v2/index.html 位于 /ID.-ERA-9X/v2/，所以 ../data.json 指向项目根目录的 data.json
+var DATA_URL = "../data.json";
 var CLAIM_KEY = "era9x_claimed_v2";
 
 var COPY_DATA = [];
