@@ -8,9 +8,15 @@
 :root{--brand-1:#6366f1;--brand-2:#8b5cf6;--brand-3:#ec4899;--brand-grad:linear-gradient(135deg,#6366f1,#8b5cf6 45%,#ec4899);--ink:#1f2138;--ink-soft:#5b5f7b;--bg:#f5f6fb;--line:#ececf5;--card:#fff;--shadow:0 14px 40px -18px rgba(76,49,128,.35);--radius:18px}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
-.hero{padding:46px 22px 26px;text-align:center;background:radial-gradient(120% 120% at 50% 0%,rgba(139,92,246,.10),transparent 60%)}
+.hero{padding:46px 22px 14px;text-align:center;background:radial-gradient(120% 120% at 50% 0%,rgba(139,92,246,.10),transparent 60%)}
 .hero h1{margin:0;font-size:30px;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
 .hero p{color:var(--ink-soft);margin:12px auto 0;max-width:640px;line-height:1.7;font-size:14.5px}
+.tokenbar{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 22px 6px;font-size:13px;color:var(--ink-soft)}
+.tokenbar input{width:min(360px,70vw);padding:8px 10px;border-radius:10px;border:1px solid rgba(99,102,241,.25);outline:none;font-size:13px}
+.tokenbar input:focus{border-color:var(--brand-2)}
+.tokenbar button{border:none;cursor:pointer;font-size:13px;font-weight:600;padding:8px 12px;border-radius:10px}
+.tokenbar .save{background:var(--brand-grad);color:#fff}
+.tokenbar .clear{background:rgba(99,102,241,.1);color:var(--brand-2)}
 .wrap{max-width:1080px;margin:0 auto;padding:8px 22px 80px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow)}
@@ -21,6 +27,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 .banner b{color:#c2410c}
 .mode{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;font-weight:600;margin-left:8px;vertical-align:middle}
 .mode.on{background:rgba(16,185,129,.12);color:#047857}
+.mode.read{background:rgba(245,158,11,.14);color:#b45309}
 .mode.off{background:rgba(148,163,184,.16);color:#64748b}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
@@ -52,7 +59,15 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 
 <div class="hero">
   <h1>ID. ERA 9X 软件升级分享</h1>
-  <p>挑你需要的文案，点击复制即可使用。复制后该条在本机归档；库存由全网共享计数统一管理，避免多人重复领取。<span id="modeTag" class="mode off">跨用户计数：未启用</span></p>
+  <p>挑你需要的文案，点击复制即可使用。复制后本机归档；跨用户的「已领数量」存于仓库 <code>claims.json</code>，由粘贴了 GitHub Token 的人写入、所有人可读。
+  <span id="modeTag" class="mode off">跨用户计数：未启用</span></p>
+</div>
+
+<div class="tokenbar">
+  <span>GitHub Token(仅用于跨用户写入，存本机浏览器)：</span>
+  <input type="password" id="ghToken" placeholder="在此粘贴你的 PAT" autocomplete="off" />
+  <button class="save" id="saveToken">保存</button>
+  <button class="clear" id="clearToken">清除</button>
 </div>
 
 <div class="wrap">
@@ -66,8 +81,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
   <div class="grid" id="grid"></div>
 
   <p class="note">
-    本页为「方案 B / 跨用户版」演示：文案复用现有 <code>data.json</code>（仍由后台 admin.html 管理），<br>
-    跨用户的「已领数量」存储在 Cloudflare KV，通过无服务器 Worker 读写，公开页面不含任何写权限。
+    本页为「方案 B / 跨用户版」演示：文案复用现有 <code>data.json</code>（由后台 admin.html 管理）。<br>
+    跨用户计数写入仓库 <code>claims.json</code>：在上方粘贴你的 GitHub PAT（仅本机保存），你的复制即全网同步；未粘贴 Token 的访客也能只读看到计数。
   </p>
 </div>
 
@@ -84,24 +99,38 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 <div class="toast" id="toast">已保存</div>
 
 <script>
-/* ============ 配置 ============ */
-// 部署 Cloudflare Worker 后，把它的地址填到下面（例如 https://era9x-claims.xxxx.workers.dev）
-// 留空则自动降级为「仅本机去重」，页面仍可正常使用。
-var WORKER_URL = "";
+/* ============ 配置（路线 B：运行时填 Token，不写死在源码里） ============ */
+var GH_OWNER = "MeetYou3311";
+var GH_REPO  = "ID.-ERA-9X";
+var CLAIMS_FILE = "claims.json";
 // 复用现有文案数据（由 admin.html 管理，不重复造数据）
 // v2/index.html 位于 /ID.-ERA-9X/v2/，所以 ../data.json 指向项目根目录的 data.json
 var DATA_URL = "../data.json";
+var TOKEN_KEY = "era9x_gh_token";
 var CLAIM_KEY = "era9x_claimed_v2";
 
 var COPY_DATA = [];
 var SETTINGS = { lowStockThreshold: 10, defaultStock: 100 };
 var CLAIMS = {};          // id -> 全网已领数量
-var modeOn = false;
+var modeOn = false;       // true=可写(有Token); false=只读/未启用
+
+function getGhToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
+
+var GH_API = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + CLAIMS_FILE;
+function ghHeaders(){ return { "Authorization": "Bearer " + getGhToken(), "Accept": "application/vnd.github+json" }; }
+function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64dec(s){ return decodeURIComponent(escape(atob(s))); }
 
 /* ============ 工具 ============ */
 function getLocalClaimed(){ try{ return JSON.parse(localStorage.getItem(CLAIM_KEY)||"[]"); }catch(e){ return []; } }
 function addLocalClaimed(id){ var a=getLocalClaimed(); if(a.indexOf(id)<0){a.push(id); localStorage.setItem(CLAIM_KEY, JSON.stringify(a));} }
 function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2000); }
+function setMode(kind){
+  var tag=document.getElementById("modeTag");
+  if(kind==="write"){ modeOn=true; tag.className="mode on"; tag.textContent="跨用户计数：可写入"; }
+  else if(kind==="read"){ modeOn=false; tag.className="mode read"; tag.textContent="跨用户计数：只读"; }
+  else { modeOn=false; tag.className="mode off"; tag.textContent="跨用户计数：未启用"; }
+}
 
 /* ============ 数据 ============ */
 function loadData(){
@@ -109,14 +138,41 @@ function loadData(){
     .then(function(obj){
       COPY_DATA = obj.COPY_DATA || [];
       SETTINGS = Object.assign(SETTINGS, obj.COPY_SETTINGS || {});
-      if(WORKER_URL){ loadClaims(); } else { render(); }
+      loadClaims();
     })
     .catch(function(e){ document.getElementById("grid").innerHTML = '<p style="color:#b91c1c">加载失败：'+e.message+'</p>'; });
 }
 function loadClaims(){
-  fetch(WORKER_URL.replace(/\/$/,"") + "/counts", {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("计数服务 "+r.status); return r.json(); })
-    .then(function(map){ CLAIMS = map||{}; modeOn=true; document.getElementById("modeTag").className="mode on"; document.getElementById("modeTag").textContent="跨用户计数：已启用"; render(); })
-    .catch(function(){ modeOn=false; document.getElementById("modeTag").className="mode off"; document.getElementById("modeTag").textContent="跨用户计数：未启用"; render(); });
+  if(getGhToken()){
+    // 有 Token：实时读（可写）
+    fetch(GH_API, { headers: ghHeaders(), cache:"no-store" })
+      .then(function(r){ if(r.status===404) return {}; if(!r.ok) throw new Error("计数服务 "+r.status); return r.json(); })
+      .then(function(j){ CLAIMS = j.content ? JSON.parse(b64dec(j.content)) : {}; setMode("write"); render(); })
+      .catch(function(){ setMode("off"); render(); });
+  } else {
+    // 无 Token：只读公开 claims.json（Pages 提供，约 1–2 分钟延迟）
+    fetch("../" + CLAIMS_FILE, {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
+      .then(function(map){ CLAIMS = map||{}; setMode("read"); render(); })
+      .catch(function(){ setMode("off"); render(); });
+  }
+}
+function writeClaim(id){
+  if(!getGhToken()){ render(); return; }   // 无 Token 仅本机
+  fetch(GH_API, { headers: ghHeaders() }).then(function(r){
+    var sha=null, claims={};
+    if(r.ok){ return r.json().then(function(j){ sha=j.sha; claims = j.content?JSON.parse(b64dec(j.content)):{}; return putClaim(sha, claims, id); }); }
+    if(r.status===404){ return putClaim(null, {}, id); }
+    throw new Error("读取计数 "+r.status);
+  }).catch(function(e){ console.error(e); render(); });
+}
+function putClaim(sha, claims, id){
+  claims[id] = (claims[id]||0) + 1;
+  var body = { message:"更新领取计数（跨用户）: "+id, content: b64enc(JSON.stringify(claims, null, 2)) };
+  if(sha) body.sha = sha;
+  return fetch(GH_API, { method:"PUT", headers:Object.assign({"Content-Type":"application/json"}, ghHeaders()), body:JSON.stringify(body) })
+    .then(function(r){ if(!r.ok) throw new Error("写入计数 "+r.status); return r.json(); })
+    .then(function(){ CLAIMS[id] = claims[id]; render(); })
+    .catch(function(e){ console.error(e); render(); });
 }
 
 /* ============ 计算 ============ */
@@ -144,7 +200,7 @@ function render(){
     var meta = document.createElement("div"); meta.className="meta";
     var remHtml = hasStock(it)
       ? '剩余 <b>'+rem+'</b> / 共 '+stockOf(it)
-      : '不限量' + (modeOn ? '（已领 '+claimedOf(it.id)+'）' : '');
+      : '不限量' + (modeOn||claimedOf(it.id)>0 ? '（已领 '+claimedOf(it.id)+'）' : '');
     var remEl = document.createElement("div"); remEl.className="remain"; remEl.innerHTML = remHtml; meta.appendChild(remEl);
 
     var btn = document.createElement("button"); btn.className="btn";
@@ -164,7 +220,6 @@ function render(){
   document.getElementById("stEmpty").textContent = emptyCount;
   document.getElementById("stClaimed").textContent = totalClaimed;
 
-  // 低库存预警（跨用户）
   var low = COPY_DATA.filter(function(it){ return hasStock(it) && remainingOf(it)>0 && remainingOf(it) <= (SETTINGS.lowStockThreshold||0); });
   var banner = document.getElementById("banner");
   if(low.length){
@@ -177,19 +232,12 @@ function render(){
 function doCopy(it){
   var text = it.content;
   navigator.clipboard.writeText(text).then(function(){ showModal(text); }).catch(function(){
-    // 降级方案
     var ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
     try{ document.execCommand("copy"); showModal(text); }catch(e){ alert("复制失败，请手动复制"); }
     document.body.removeChild(ta);
   });
   addLocalClaimed(it.id);
-  if(modeOn){
-    fetch(WORKER_URL.replace(/\/$/,"") + "/claim", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({id:it.id})})
-      .then(function(r){ return r.json(); }).then(function(j){ if(j && typeof j.claimed==="number"){ CLAIMS[it.id]=j.claimed; } render(); })
-      .catch(function(){ render(); });
-  } else {
-    render();
-  }
+  writeClaim(it.id);   // 有 Token 则跨用户 +1；无则仅本机
 }
 
 /* ============ 弹窗 ============ */
@@ -198,6 +246,17 @@ function showModal(text){ document.getElementById("modalText").textContent=text;
 document.getElementById("modalClose").addEventListener("click", function(){ modal.classList.remove("show"); });
 document.getElementById("modalCopy").addEventListener("click", function(){ var t=document.getElementById("modalText").textContent; navigator.clipboard.writeText(t).then(function(){ toast("已复制"); }); });
 modal.addEventListener("click", function(e){ if(e.target===modal) modal.classList.remove("show"); });
+
+/* ============ Token 输入 ============ */
+var ghInput=document.getElementById("ghToken");
+if(getGhToken()) ghInput.value=getGhToken();
+document.getElementById("saveToken").addEventListener("click", function(){
+  var v=ghInput.value.trim(); if(!v){ alert("请输入 GitHub Token"); return; }
+  localStorage.setItem(TOKEN_KEY, v); toast("已保存，正在同步…"); loadClaims();
+});
+document.getElementById("clearToken").addEventListener("click", function(){
+  localStorage.removeItem(TOKEN_KEY); ghInput.value=""; toast("已清除"); loadClaims();
+});
 
 /* ============ 启动 ============ */
 loadData();
