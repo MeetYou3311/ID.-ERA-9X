@@ -10,7 +10,7 @@
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
 .hero{padding:46px 22px 14px;text-align:center;background:radial-gradient(120% 120% at 50% 0%,rgba(139,92,246,.10),transparent 60%)}
 .hero h1{margin:0;font-size:30px;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
-.hero p{color:var(--ink-soft);margin:12px auto 0;max-width:640px;line-height:1.7;font-size:14.5px}
+.hero p{color:var(--ink-soft);margin:12px auto 0;max-width:660px;line-height:1.7;font-size:14.5px}
 .tokenbar{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 22px 6px;font-size:13px;color:var(--ink-soft)}
 .tokenbar input{width:min(360px,70vw);padding:8px 10px;border-radius:10px;border:1px solid rgba(99,102,241,.25);outline:none;font-size:13px}
 .tokenbar input:focus{border-color:var(--brand-2)}
@@ -31,6 +31,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 .mode.off{background:rgba(148,163,184,.16);color:#64748b}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.card.taken{opacity:.5;filter:grayscale(.4)}
 .card .t{font-weight:800;font-size:15px;color:var(--brand-2);margin-bottom:8px}
 .card .x{font-size:13.5px;color:var(--ink);white-space:pre-wrap;word-break:break-word;line-height:1.7;flex:1}
 .card .meta{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
@@ -42,8 +43,9 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 .btn:disabled{background:#e5e7eb;color:#9ca3af;box-shadow:none;cursor:not-allowed}
 .tag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
 .tag.done{background:#dcfce7;color:#15803d}
-.tag.empty{background:#fee2e2;color:#b91c1c}
+.tag.taken{background:#fee2e2;color:#b91c1c}
 .note{color:var(--ink-soft);font-size:12.5px;line-height:1.8;margin-top:26px;text-align:center}
+.empty{text-align:center;color:var(--ink-soft);padding:50px 20px;font-size:14px;line-height:1.8}
 .modal{position:fixed;inset:0;background:rgba(31,33,56,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal.show{opacity:1;pointer-events:auto}
 .modal .box{background:#fff;border-radius:18px;padding:24px;max-width:420px;text-align:center;box-shadow:0 30px 80px -20px rgba(31,33,56,.5)}
@@ -59,7 +61,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 
 <div class="hero">
   <h1>ID. ERA 9X 软件升级分享</h1>
-  <p>挑你需要的文案，点击复制即可使用。复制后本机归档；跨用户的「已领数量」存于仓库 <code>claims.json</code>，由粘贴了 GitHub Token 的人写入、所有人可读。
+  <p>挑你需要的文案，点击复制即可使用。复制后本机归档；任一人复制过的文案，对所有人**直接不可再复制**（标灰显示「已被领取」）。
   <span id="modeTag" class="mode off">跨用户计数：未启用</span></p>
 </div>
 
@@ -73,7 +75,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 <div class="wrap">
   <div class="stats">
     <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">可用文案</div></div>
-    <div class="stat"><div class="num" id="stEmpty">0</div><div class="lbl">已领完</div></div>
+    <div class="stat"><div class="num" id="stTaken">0</div><div class="lbl">已被领取</div></div>
     <div class="stat"><div class="num" id="stClaimed">0</div><div class="lbl">全网累计领取</div></div>
   </div>
 
@@ -81,8 +83,9 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
   <div class="grid" id="grid"></div>
 
   <p class="note">
-    本页为「方案 B / 跨用户版」演示：文案复用现有 <code>data.json</code>（由后台 admin.html 管理）。<br>
-    跨用户计数写入仓库 <code>claims.json</code>：在上方粘贴你的 GitHub PAT（仅本机保存），你的复制即全网同步；未粘贴 Token 的访客也能只读看到计数。
+    本页为「方案 B / 跨用户版」：文案复用现有 <code>data.json</code>（由后台 admin.html 管理）。<br>
+    只显示<b>带标题</b>的文案（空标题的「未分类」不显示）；在上方粘贴 GitHub PAT 的人复制即全网同步，未粘贴者也能只读看到「已被领取」。<br>
+    用后台导入文案时请用格式：<b>标题 Tab 正文</b>（或 <b>标题 || 正文</b>）。
   </p>
 </div>
 
@@ -103,19 +106,16 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 var GH_OWNER = "MeetYou3311";
 var GH_REPO  = "ID.-ERA-9X";
 var CLAIMS_FILE = "claims.json";
-// 复用现有文案数据（由 admin.html 管理，不重复造数据）
-// v2/index.html 位于 /ID.-ERA-9X/v2/，所以 ../data.json 指向项目根目录的 data.json
-var DATA_URL = "../data.json";
+var DATA_URL = "../data.json";          // 复用现有文案数据（由 admin.html 管理）
 var TOKEN_KEY = "era9x_gh_token";
 var CLAIM_KEY = "era9x_claimed_v2";
 
-var COPY_DATA = [];
-var SETTINGS = { lowStockThreshold: 10, defaultStock: 100 };
-var CLAIMS = {};          // id -> 全网已领数量
+var ITEMS = [];                         // 仅含带标题的文案
+var SETTINGS = { lowStockThreshold: 10, defaultStock: 1 };  // 默认每条单人次（领过即不可再领）
+var CLAIMS = {};          // id -> 全网已领次数
 var modeOn = false;       // true=可写(有Token); false=只读/未启用
 
 function getGhToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
-
 var GH_API = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + CLAIMS_FILE;
 function ghHeaders(){ return { "Authorization": "Bearer " + getGhToken(), "Accept": "application/vnd.github+json" }; }
 function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
@@ -136,7 +136,9 @@ function setMode(kind){
 function loadData(){
   fetch(DATA_URL, {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("数据加载失败 "+r.status); return r.json(); })
     .then(function(obj){
-      COPY_DATA = obj.COPY_DATA || [];
+      // 只保留带标题的文案（去除空标题的「未分类」）
+      var all = obj.COPY_DATA || [];
+      ITEMS = all.filter(function(it){ return (it.title||"").trim() !== ""; });
       SETTINGS = Object.assign(SETTINGS, obj.COPY_SETTINGS || {});
       loadClaims();
     })
@@ -144,20 +146,18 @@ function loadData(){
 }
 function loadClaims(){
   if(getGhToken()){
-    // 有 Token：实时读（可写）
     fetch(GH_API, { headers: ghHeaders(), cache:"no-store" })
       .then(function(r){ if(r.status===404) return {}; if(!r.ok) throw new Error("计数服务 "+r.status); return r.json(); })
       .then(function(j){ CLAIMS = j.content ? JSON.parse(b64dec(j.content)) : {}; setMode("write"); render(); })
       .catch(function(){ setMode("off"); render(); });
   } else {
-    // 无 Token：只读公开 claims.json（Pages 提供，约 1–2 分钟延迟）
     fetch("../" + CLAIMS_FILE, {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
       .then(function(map){ CLAIMS = map||{}; setMode("read"); render(); })
       .catch(function(){ setMode("off"); render(); });
   }
 }
 function writeClaim(id){
-  if(!getGhToken()){ render(); return; }   // 无 Token 仅本机
+  if(!getGhToken()){ render(); return; }
   fetch(GH_API, { headers: ghHeaders() }).then(function(r){
     var sha=null, claims={};
     if(r.ok){ return r.json().then(function(j){ sha=j.sha; claims = j.content?JSON.parse(b64dec(j.content)):{}; return putClaim(sha, claims, id); }); }
@@ -179,52 +179,60 @@ function putClaim(sha, claims, id){
 function stockOf(it){ return (typeof it.stock === "number" && it.stock > 0) ? it.stock : SETTINGS.defaultStock; }
 function hasStock(it){ return typeof it.stock === "number" && it.stock > 0; }
 function claimedOf(id){ return CLAIMS[id] || 0; }
-function remainingOf(it){ return Math.max(0, stockOf(it) - claimedOf(it.id)); }
+// 任一人领过一次（无库存概念时）即视为已被领取；有库存则耗尽才禁用
+function isCrossTaken(it){ return hasStock(it) ? (stockOf(it) - claimedOf(it.id) <= 0) : (claimedOf(it.id) > 0); }
 function isLocalTaken(id){ return getLocalClaimed().indexOf(id) >= 0; }
 
 /* ============ 渲染 ============ */
 function render(){
   var grid = document.getElementById("grid"); grid.innerHTML="";
-  var emptyCount=0, totalClaimed=0;
-  COPY_DATA.forEach(function(it){
+  if(ITEMS.length === 0){
+    grid.innerHTML = '<div class="empty">当前没有「带标题」的文案。<br>请用后台 admin.html 导入，格式：<b>标题 Tab 正文</b>（或 <b>标题 || 正文</b>），<br>带标题的文案才会在本页显示。</div>';
+    document.getElementById("stTotal").textContent = 0;
+    document.getElementById("stTaken").textContent = 0;
+    document.getElementById("stClaimed").textContent = 0;
+    document.getElementById("banner").className="banner";
+    return;
+  }
+  var takenCount=0, totalClaimed=0;
+  ITEMS.forEach(function(it){
     totalClaimed += claimedOf(it.id);
-    var rem = remainingOf(it);
-    var localTaken = isLocalTaken(it.id);
-    var depleted = hasStock(it) && rem<=0;
-    if(depleted) emptyCount++;
+    var cross = isCrossTaken(it);
+    var local = isLocalTaken(it.id);
+    var taken = cross || local;
+    if(taken) takenCount++;
 
-    var card = document.createElement("div"); card.className="card";
+    var card = document.createElement("div"); card.className="card" + (taken?" taken":"");
     var t = document.createElement("div"); t.className="t"; t.textContent = it.title || "（无标题）"; card.appendChild(t);
     var x = document.createElement("div"); x.className="x"; x.textContent = it.content; card.appendChild(x);
 
     var meta = document.createElement("div"); meta.className="meta";
-    var remHtml = hasStock(it)
-      ? '剩余 <b>'+rem+'</b> / 共 '+stockOf(it)
-      : '不限量' + (modeOn||claimedOf(it.id)>0 ? '（已领 '+claimedOf(it.id)+'）' : '');
-    var remEl = document.createElement("div"); remEl.className="remain"; remEl.innerHTML = remHtml; meta.appendChild(remEl);
+    var remEl = document.createElement("div"); remEl.className="remain";
+    if(hasStock(it)) remEl.innerHTML = '剩余 <b>'+Math.max(0,stockOf(it)-claimedOf(it.id))+'</b> / 共 '+stockOf(it);
+    else remEl.innerHTML = cross ? '已被领取' : '可复制';
+    meta.appendChild(remEl);
 
     var btn = document.createElement("button"); btn.className="btn";
-    if(depleted){ btn.textContent="已领完"; btn.disabled=true; }
-    else if(localTaken){ btn.textContent="已领取"; btn.disabled=true; }
+    if(taken){ btn.textContent = cross ? "已被领取" : "已领取"; btn.disabled=true; }
     else { btn.textContent="复制"; btn.addEventListener("click", function(){ doCopy(it); }); }
     meta.appendChild(btn);
     card.appendChild(meta);
 
-    if(depleted){ var tag=document.createElement("span"); tag.className="tag empty"; tag.textContent="已领完"; card.querySelector(".t").appendChild(tag); }
-    else if(localTaken){ var tag2=document.createElement("span"); tag2.className="tag done"; tag2.textContent="本机已领"; card.querySelector(".t").appendChild(tag2); }
+    if(cross){ var tag=document.createElement("span"); tag.className="tag taken"; tag.textContent="已被领取"; card.querySelector(".t").appendChild(tag); }
+    else if(local){ var tag2=document.createElement("span"); tag2.className="tag done"; tag2.textContent="本机已领"; card.querySelector(".t").appendChild(tag2); }
 
     grid.appendChild(card);
   });
 
-  document.getElementById("stTotal").textContent = COPY_DATA.length;
-  document.getElementById("stEmpty").textContent = emptyCount;
+  document.getElementById("stTotal").textContent = ITEMS.length;
+  document.getElementById("stTaken").textContent = takenCount;
   document.getElementById("stClaimed").textContent = totalClaimed;
 
-  var low = COPY_DATA.filter(function(it){ return hasStock(it) && remainingOf(it)>0 && remainingOf(it) <= (SETTINGS.lowStockThreshold||0); });
+  var avail = ITEMS.length - takenCount;
   var banner = document.getElementById("banner");
-  if(low.length){
+  if(avail > 0 && avail <= (SETTINGS.lowStockThreshold||0)){
     banner.className="banner show";
-    banner.innerHTML = "⚠️ <b>低库存提醒</b>：以下文案剩余不多，请尽快补充 —— " + low.map(function(it){ return "《"+(it.title||"无标题")+"》剩 "+remainingOf(it); }).join("；");
+    banner.innerHTML = "⚠️ <b>低库存提醒</b>：仅剩 <b>"+avail+"</b> 条文案可领取，请尽快补充。";
   } else { banner.className="banner"; }
 }
 
@@ -237,7 +245,7 @@ function doCopy(it){
     document.body.removeChild(ta);
   });
   addLocalClaimed(it.id);
-  writeClaim(it.id);   // 有 Token 则跨用户 +1；无则仅本机
+  writeClaim(it.id);   // 有 Token 则跨用户 +1（领过即不可再领）；无则仅本机
 }
 
 /* ============ 弹窗 ============ */
