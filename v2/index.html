@@ -84,8 +84,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang 
 
   <p class="note">
     本页为「方案 B / 跨用户版」：文案复用现有 <code>data.json</code>（由后台 admin.html 管理）。<br>
-    只显示<b>带标题</b>的文案（空标题的「未分类」不显示）；在上方粘贴 GitHub PAT 的人复制即全网同步，未粘贴者也能只读看到「已被领取」。<br>
-    用后台导入文案时请用格式：<b>标题 Tab 正文</b>（或 <b>标题 || 正文</b>）。
+    任一人复制过的文案，对所有人直接不可再复制（标灰显示「已被领取」）；在上方粘贴 GitHub PAT 的人复制即全网同步，未粘贴者也能只读看到「已被领取」。<br>
+    后台导入支持批量 / 单条 / 文件；如需标题用格式 <b>标题 Tab 正文</b>（或 <b>标题 || 正文</b>），否则自动取正文首行作标题。
   </p>
 </div>
 
@@ -136,9 +136,8 @@ function setMode(kind){
 function loadData(){
   fetch(DATA_URL, {cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error("数据加载失败 "+r.status); return r.json(); })
     .then(function(obj){
-      // 只保留带标题的文案（去除空标题的「未分类」）
-      var all = obj.COPY_DATA || [];
-      ITEMS = all.filter(function(it){ return (it.title||"").trim() !== ""; });
+      // 显示全部文案（标题为空时，用正文第一行当标题，避免出现「未分类/（无标题）」字样）
+      ITEMS = obj.COPY_DATA || [];
       SETTINGS = Object.assign(SETTINGS, obj.COPY_SETTINGS || {});
       loadClaims();
     })
@@ -179,6 +178,14 @@ function putClaim(sha, claims, id){
 function stockOf(it){ return (typeof it.stock === "number" && it.stock > 0) ? it.stock : SETTINGS.defaultStock; }
 function hasStock(it){ return typeof it.stock === "number" && it.stock > 0; }
 function claimedOf(id){ return CLAIMS[id] || 0; }
+// 标题为空时，用正文第一行当标题
+function cardTitle(it){
+  var t=(it.title||"").trim();
+  if(t) return t;
+  var first=(it.content||"").split(/\r?\n/)[0].trim();
+  if(!first) return "文案";
+  return first.length>20 ? first.slice(0,20)+"…" : first;
+}
 // 任一人领过一次（无库存概念时）即视为已被领取；有库存则耗尽才禁用
 function isCrossTaken(it){ return hasStock(it) ? (stockOf(it) - claimedOf(it.id) <= 0) : (claimedOf(it.id) > 0); }
 function isLocalTaken(id){ return getLocalClaimed().indexOf(id) >= 0; }
@@ -187,7 +194,7 @@ function isLocalTaken(id){ return getLocalClaimed().indexOf(id) >= 0; }
 function render(){
   var grid = document.getElementById("grid"); grid.innerHTML="";
   if(ITEMS.length === 0){
-    grid.innerHTML = '<div class="empty">当前没有「带标题」的文案。<br>请用后台 admin.html 导入，格式：<b>标题 Tab 正文</b>（或 <b>标题 || 正文</b>），<br>带标题的文案才会在本页显示。</div>';
+    grid.innerHTML = '<div class="empty">当前没有文案。<br>请用后台 admin.html 导入文案，保存后稍等 1–2 分钟（GitHub Pages 重建）即可在此显示。</div>';
     document.getElementById("stTotal").textContent = 0;
     document.getElementById("stTaken").textContent = 0;
     document.getElementById("stClaimed").textContent = 0;
@@ -203,7 +210,7 @@ function render(){
     if(taken) takenCount++;
 
     var card = document.createElement("div"); card.className="card" + (taken?" taken":"");
-    var t = document.createElement("div"); t.className="t"; t.textContent = it.title || "（无标题）"; card.appendChild(t);
+    var t = document.createElement("div"); t.className="t"; t.textContent = cardTitle(it); card.appendChild(t);
     var x = document.createElement("div"); x.className="x"; x.textContent = it.content; card.appendChild(x);
 
     var meta = document.createElement("div"); meta.className="meta";
