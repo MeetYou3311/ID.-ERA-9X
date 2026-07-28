@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ID. ERA 9X 软件升级分享</title>
+<style>
+:root{--brand-1:#6366f1;--brand-2:#8b5cf6;--brand-3:#ec4899;--brand-grad:linear-gradient(135deg,#6366f1 0%,#8b5cf6 45%,#ec4899 100%);--ink:#1f2138;--ink-soft:#5b5f7b;--bg:#f5f6fb;--card:rgba(255,255,255,.72);--card-border:rgba(255,255,255,.9);--shadow:0 18px 50px -18px rgba(76,49,128,.35);--radius:20px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;position:relative;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;border-radius:50%;filter:blur(90px);opacity:.5;z-index:0;pointer-events:none}
+body::before{width:520px;height:520px;background:radial-gradient(circle,#8b5cf6,transparent 70%);top:-160px;left:-120px}
+body::after{width:460px;height:460px;background:radial-gradient(circle,#ec4899,transparent 70%);bottom:-160px;right:-120px}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 22px 80px}
+.hero{text-align:center;padding:64px 16px 36px}
+.hero .badge{display:inline-block;font-size:12px;letter-spacing:2px;padding:6px 14px;border-radius:999px;background:var(--card);border:1px solid var(--card-border);color:var(--ink-soft);box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{font-size:clamp(30px,5vw,46px);margin:0 0 12px;line-height:1.2;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.hero p{margin:0 auto;max-width:560px;color:var(--ink-soft);font-size:15px;line-height:1.7}
+.lowstock{display:none;align-items:center;gap:10px;margin:18px auto 0;max-width:640px;padding:14px 18px;border-radius:16px;background:linear-gradient(135deg,#fff4e5,#ffe3ec);border:1px solid #ffd2a8;color:#a8451a;font-size:14px;font-weight:600;box-shadow:var(--shadow)}
+.lowstock.show{display:flex}
+.lowstock .dot{width:10px;height:10px;border-radius:50%;background:#f97316;flex:none;box-shadow:0 0 0 4px rgba(249,115,22,.2)}
+.toolbar{display:flex;gap:12px;align-items:center;margin:30px 0 8px;flex-wrap:wrap}
+.search{flex:1 1 280px;position:relative}
+.search input{width:100%;padding:14px 16px 14px 44px;border-radius:14px;border:1px solid rgba(99,102,241,.18);background:var(--card);font-size:15px;color:var(--ink);outline:none;box-shadow:var(--shadow);transition:border-color .2s,box-shadow .2s}
+.search input:focus{border-color:var(--brand-2);box-shadow:0 0 0 4px rgba(139,92,246,.15)}
+.search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--ink-soft)}
+.count-pill{font-size:13px;color:var(--ink-soft);background:var(--card);border:1px solid var(--card-border);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);white-space:nowrap}
+.count-pill b{color:var(--brand-2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:22px}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);backdrop-filter:blur(10px);display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease;animation:pop .25s ease}
+.card:hover{transform:translateY(-4px);box-shadow:0 26px 60px -20px rgba(76,49,128,.45)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card .title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--brand-2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card .title::before{content:"";width:6px;height:16px;border-radius:3px;background:var(--brand-grad)}
+.card .content{font-size:14.5px;line-height:1.75;color:var(--ink);white-space:pre-wrap;word-break:break-word;flex:1;overflow:hidden;max-height:220px;-webkit-mask-image:linear-gradient(180deg,#000 78%,transparent);mask-image:linear-gradient(180deg,#000 78%,transparent)}
+.card .actions{display:flex;gap:10px;margin-top:16px}
+.btn{border:none;cursor:pointer;font-size:14px;font-weight:600;padding:11px 16px;border-radius:12px;transition:transform .12s,filter .12s,box-shadow .12s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--brand-grad);color:#fff;box-shadow:0 10px 24px -8px rgba(139,92,246,.6);flex:1}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-ghost{background:rgba(99,102,241,.08);color:var(--brand-2)}
+.btn-ghost:hover{background:rgba(99,102,241,.14)}
+.empty{text-align:center;color:var(--ink-soft);padding:70px 20px;font-size:15px}
+.empty .big{font-size:40px;margin-bottom:12px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(31,33,56,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal-backdrop.show{display:flex}
+.modal{width:100%;max-width:440px;background:#fff;border-radius:22px;padding:26px;box-shadow:0 30px 80px -20px rgba(31,33,56,.5);animation:pop .2s ease}
+.modal h3{margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:10px}
+.modal .preview{background:#f7f7fc;border:1px solid #ececf5;border-radius:14px;padding:14px;font-size:13.5px;line-height:1.7;color:var(--ink-soft);max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin-bottom:18px}
+.modal .modal-actions{display:flex;gap:12px}
+.modal .modal-actions .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:36px;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 16px 40px -12px rgba(0,0,0,.5);opacity:0;transition:transform .3s ease,opacity .3s ease;z-index:60;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.footer-tip{text-align:center;color:var(--ink-soft);font-size:12.5px;margin-top:40px;line-height:1.7}
+.link-btn{background:none;border:none;color:var(--brand-2);cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <span class="badge">ID. ERA · 内部资料</span>
+    <h1>ID. ERA 9X 软件升级分享</h1>
+    <p>内部软件升级文案集中地。挑你需要的，点击复制即可使用；复制后该条自动归档，避免重复领取。</p>
+  </header>
+
+  <div class="lowstock" id="lowstock">
+    <span class="dot"></span>
+    <span id="lowstockText">文案库存不足，请联系管理员补充。</span>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="search" type="text" placeholder="搜索文案关键词…" autocomplete="off" />
+    </div>
+    <div class="count-pill">剩余可用 <b id="countNum">0</b> 条</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    <div class="big">📭</div>
+    <div id="emptyText">暂时没有可复制的文案，敬请期待管理员补充。</div>
+  </div>
+
+  <div class="footer-tip">
+    复制即视为已领取，本机将不再显示该条。<br />
+    <button class="link-btn" id="resetBtn">重置本机已领取记录（仅影响你自己）</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3>📋 确认复制这条文案？</h3>
+    <div class="preview" id="modalPreview"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">取消</button>
+      <button class="btn btn-primary" id="modalConfirm">复制并领取</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ 已复制</div>
+
+<script>
+/* ===== 文案数据（已内联） ===== */
+var COPY_DATA = [
+  { id:"seed-1", title:"升级前须知", content:"升级前请确认车辆已熄火并处于 P 档，电量高于 20%。升级过程约 8-12 分钟，期间请勿操作车机或断电，避免升级失败。" },
+  { id:"seed-2", title:"新版本亮点", content:"本次 9X 软件升级带来：①语音助手响应更快；②导航车道级引导；③自动泊车识别更准；④新增灯光秀模式。建议尽快完成升级体验。" },
+  { id:"seed-3", title:"升级后设置", content:"升级完成后建议重启一次车机：长按音量旋钮 10 秒。随后在「设置-系统-关于」中确认版本号已更新，并重新登录你的账户。" },
+  { id:"seed-4", title:"常见问题-卡在进度条", content:"若升级界面卡在 99% 超过 15 分钟，请耐心等待，勿强制断电。如仍无反应，长按方向盘 Home 键 15 秒强制重启车机即可继续。" },
+  { id:"seed-5", title:"邀请话术", content:"您的 ID. ERA 9X 已推送新版本软件，建议本周内完成升级，体验更顺滑的语音与导航。升级入口：车机「设置-系统-软件更新」。" }
+];
+var COPY_SETTINGS = { lowStockThreshold: 10 };
+
+/* ===== 公开页逻辑 ===== */
+(function(){
+  "use strict";
+  var CLAIM_KEY="era9x_claimed_v1";
+  var data=COPY_DATA.slice();
+  var settings=COPY_SETTINGS||{lowStockThreshold:10};
+  var grid=document.getElementById("grid");
+  var empty=document.getElementById("empty");
+  var emptyText=document.getElementById("emptyText");
+  var countNum=document.getElementById("countNum");
+  var searchInput=document.getElementById("search");
+  var lowstock=document.getElementById("lowstock");
+  var lowstockText=document.getElementById("lowstockText");
+  var modal=document.getElementById("modal");
+  var modalPreview=document.getElementById("modalPreview");
+  var toast=document.getElementById("toast");
+  var pendingId=null;
+
+  function getClaimed(){try{return JSON.parse(localStorage.getItem(CLAIM_KEY)||"[]")}catch(e){return[]}}
+  function addClaimed(id){var l=getClaimed();if(l.indexOf(id)===-1)l.push(id);localStorage.setItem(CLAIM_KEY,JSON.stringify(l))}
+
+  function render(){
+    var claimed=getClaimed();
+    var q=(searchInput.value||"").trim().toLowerCase();
+    var available=data.filter(function(d){
+      if(claimed.indexOf(d.id)!==-1)return false;
+      if(!q)return true;
+      return ((d.title||"")+" "+(d.content||"")).toLowerCase().indexOf(q)!==-1;
+    });
+    grid.innerHTML="";
+    if(available.length===0){
+      empty.style.display="block";
+      emptyText.textContent=q?"没有匹配「"+searchInput.value+"」的文案。":"暂时没有可复制的文案，敬请期待管理员补充。";
+    }else{
+      empty.style.display="none";
+      available.forEach(function(d){grid.appendChild(buildCard(d))});
+    }
+    countNum.textContent=available.length;
+    if(available.length<=settings.lowStockThreshold){
+      lowstock.classList.add("show");
+      lowstockText.textContent="文案库存不足（剩余 "+available.length+" 条），请联系管理员补充。";
+    }else{lowstock.classList.remove("show")}
+  }
+
+  function buildCard(d){
+    var card=document.createElement("div");card.className="card";
+    var title=document.createElement("div");title.className="title";title.textContent=d.title||"文案";
+    var content=document.createElement("div");content.className="content";content.textContent=d.content||"";
+    var actions=document.createElement("div");actions.className="actions";
+    var copyBtn=document.createElement("button");copyBtn.className="btn btn-primary";copyBtn.innerHTML="📋 复制";
+    copyBtn.addEventListener("click",function(){openModal(d)});
+    actions.appendChild(copyBtn);
+    card.appendChild(title);card.appendChild(content);card.appendChild(actions);
+    return card;
+  }
+
+  function openModal(d){pendingId=d.id;modalPreview.textContent=(d.title?"【"+d.title+"】\n":"")+d.content;modal.classList.add("show")}
+  function closeModal(){modal.classList.remove("show");pendingId=null}
+
+  function doCopy(){
+    var id=pendingId;
+    var item=data.filter(function(d){return d.id===id})[0];
+    if(!item){closeModal();return;}
+    copyText(item.content).then(function(){addClaimed(id);closeModal();showToast("✅ 已复制并领取");render()}).catch(function(){addClaimed(id);closeModal();showToast("已复制（如未自动复制请手动选择）");render()});
+  }
+
+  function copyText(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);
+    return new Promise(function(res,rej){try{var t=document.createElement("textarea");t.value=text;t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);res()}catch(e){rej(e)}});
+  }
+
+  var toastTimer=null;
+  function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show")},1900)}
+
+  searchInput.addEventListener("input",render);
+  document.getElementById("modalCancel").addEventListener("click",closeModal);
+  document.getElementById("modalConfirm").addEventListener("click",doCopy);
+  modal.addEventListener("click",function(e){if(e.target===modal)closeModal()});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&modal.classList.contains("show"))closeModal()});
+  document.getElementById("resetBtn").addEventListener("click",function(){if(confirm("确定重置本机已领取记录？这会让所有文案重新显示（仅影响你这台设备）。")){localStorage.removeItem(CLAIM_KEY);render();showToast("已重置本机记录")}});
+
+  render();
+})();
+</script>
+</body>
+</html>
