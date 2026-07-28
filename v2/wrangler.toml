@@ -2,9 +2,11 @@ name = "era9x-claims"
 main = "worker.js"
 compatibility_date = "2024-11-01"
 
-# 跨用户领取计数用的 KV 命名空间
-# 部署前先执行：wrangler kv namespace create CLAIM_KV
-# 把返回的 id 填到下面的 id 字段
-[[kv_namespaces]]
-binding = "CLAIM_KV"
-id = "REPLACE_WITH_YOUR_KV_ID"
+# 仓库信息（计数写回这里）
+[vars]
+REPO_OWNER = "MeetYou3311"
+REPO_NAME = "ID.-ERA-9X"
+CLAIMS_PATH = "claims.json"
+
+# GitHub Token（PAT，需对该仓库有 Contents: write）用以下命令设置，不会写进代码：
+#   wrangler secret put GH_TOKEN
