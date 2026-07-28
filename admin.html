@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ID. ERA 9X · 管理后台</title>
+<style>
+:root{--brand-1:#6366f1;--brand-2:#8b5cf6;--brand-3:#ec4899;--brand-grad:linear-gradient(135deg,#6366f1,#8b5cf6 45%,#ec4899);--ink:#1f2138;--ink-soft:#5b5f7b;--bg:#f5f6fb;--line:#ececf5;--card:#fff;--shadow:0 14px 40px -18px rgba(76,49,128,.35);--radius:18px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.7);backdrop-filter:blur(8px);position:sticky;top:0;z-index:5}
+.topbar h1{margin:0;font-size:20px;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.topbar .acts{display:flex;gap:10px}
+.wrap{max-width:1080px;margin:0 auto;padding:26px 22px 80px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.stat .num{font-size:32px;font-weight:800;background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .lbl{color:var(--ink-soft);font-size:13px;margin-top:4px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 14px;font-size:17px}
+.hint{color:var(--ink-soft);font-size:12.5px;margin:0 0 12px;line-height:1.6}
+textarea,input[type=text],input[type=number],input[type=password]{width:100%;border-radius:12px;border:1px solid rgba(99,102,241,.18);background:#fff;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--ink);outline:none;resize:vertical}
+textarea:focus,input:focus{border-color:var(--brand-2);box-shadow:0 0 0 4px rgba(139,92,246,.12)}
+textarea{min-height:130px;line-height:1.7}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.btn{border:none;cursor:pointer;font-size:14px;font-weight:600;padding:11px 16px;border-radius:12px;transition:transform .12s,filter .12s;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--brand-grad);color:#fff;box-shadow:0 10px 24px -8px rgba(139,92,246,.6)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-ghost{background:rgba(99,102,241,.08);color:var(--brand-2)}
+.btn-ghost:hover{background:rgba(99,102,241,.14)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 160px}
+.list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto}
+.item{display:flex;align-items:flex-start;gap:10px;background:#fafaff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.item .b{flex:1;min-width:0}
+.item .t{font-weight:700;font-size:13px;color:var(--brand-2);margin-bottom:4px}
+.item .x{font-size:13px;color:var(--ink);white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:auto}
+.item .del{border:none;background:#ffe3ec;color:#e11d48;width:30px;height:30px;border-radius:9px;cursor:pointer;flex:none;font-size:16px}
+.item .del:hover{background:#ffd0df}
+.foot{display:flex;justify-content:flex-end;gap:12px;margin-top:22px}
+.note{background:linear-gradient(135deg,#eef2ff,#fdf2f8);border:1px solid #e0e7ff;border-radius:14px;padding:13px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-top:18px}
+.note b{color:var(--brand-2)}
+/* 登录遮罩 */
+.lock{position:fixed;inset:0;background:rgba(31,33,56,.5);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.lock.hide{display:none}
+.lock .box{width:100%;max-width:400px;background:#fff;border-radius:22px;padding:26px;box-shadow:0 30px 80px -20px rgba(31,33,56,.5)}
+.lock h3{margin:0 0 16px;font-size:18px}
+.lock .field{margin-bottom:14px}
+.toast{position:fixed;left:50%;bottom:36px;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 16px 40px -12px rgba(0,0,0,.5);opacity:0;transition:transform .3s,opacity .3s;z-index:30}
+.toast.show{transform:translate(-50%,0);opacity:1}
+#adminUI{display:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ID. ERA 9X · 管理后台</h1>
+  <div class="acts">
+    <a class="btn btn-ghost" href="https://meetyou3311.github.io/ID.-ERA-9X/" target="_blank" rel="noopener">查看前台</a>
+    <button class="btn btn-ghost" id="logoutBtn">退出</button>
+  </div>
+</div>
+
+<div id="adminUI">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="num" id="stAvail">0</div><div class="lbl">可用文案</div></div>
+      <div class="stat"><div class="num" id="stClaimed">0</div><div class="lbl">本机已领取</div></div>
+      <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">累计导入</div></div>
+    </div>
+
+    <div class="cols">
+      <!-- 左：导入 -->
+      <div class="panel">
+        <h2>导入文案</h2>
+        <p class="hint">批量：每行一条；用 <b>Tab</b> 或 <b>||</b> 分隔时，前半为标题、后半为正文。</p>
+        <div class="field">
+          <textarea id="batchText" placeholder="示例：&#10;升级前须知	升级前请确认车辆已熄火并 P 档，电量高于 20%&#10;新版本亮点 || 本次升级带来语音更快、导航更准"></textarea>
+        </div>
+        <div class="row" style="margin-bottom:14px">
+          <button class="btn btn-primary" id="parseBtn">批量导入</button>
+          <button class="btn btn-ghost" id="clearBatch">清空</button>
+        </div>
+
+        <p class="hint">单条添加：</p>
+        <div class="field"><input type="text" id="singleTitle" placeholder="标题（可选）" /></div>
+        <div class="field"><textarea id="singleContent" style="min-height:80px" placeholder="正文…"></textarea></div>
+        <button class="btn btn-primary" id="addSingle" style="width:100%;margin-bottom:16px">添加单条</button>
+
+        <p class="hint">或从文件上传（.txt / .csv，每行一条）：</p>
+        <div class="field"><input type="file" id="fileInput" accept=".txt,.csv,.md" /></div>
+
+        <p class="hint">文案不足阈值（剩余 ≤ 此值时前台提示补充）：</p>
+        <div class="field"><input type="number" id="threshold" value="10" min="0" /></div>
+      </div>
+
+      <!-- 右：列表 -->
+      <div class="panel">
+        <h2>可用文案（<span id="listCount">0</span>）</h2>
+        <div class="list" id="availList"></div>
+        <h2 style="margin-top:20px">本机已领取</h2>
+        <div class="list" id="claimedList"></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <button class="btn btn-primary" id="saveBtn">保存更改（写回仓库，前台自动更新）</button>
+    </div>
+    <div class="note">
+      <b>工作方式：</b>本后台通过 GitHub API 直接修改仓库里的 <code>data.json</code>，保存后 GitHub Pages 约 1–2 分钟自动重建，前台立即生效，无需他人中转。<br>
+      真正权限来自你的 GitHub Token（仅存于本机浏览器）；管理员密码仅作入口区分。
+    </div>
+  </div>
+</div>
+
+<!-- 登录 -->
+<div class="lock" id="lock">
+  <div class="box">
+    <h3>🔐 管理员登录</h3>
+    <div class="field"><label>管理员密码</label><input type="password" id="pwInput" placeholder="请输入管理员密码" /></div>
+    <div class="field"><label>GitHub Token（PAT，仓库 Contents:write）</label><input type="password" id="tokenInput" placeholder="github_pat_xxx" /></div>
+    <button class="btn btn-primary" id="loginBtn" style="width:100%">进入后台</button>
+    <p class="hint" style="margin-top:12px">密码由管理员告知；Token 仅保存在你本机浏览器，不会上传。</p>
+  </div>
+</div>
+
+<div class="toast" id="toast">已保存</div>
+
+<script>
+/* 配置 */
+var OWNER="MeetYou3311";
+var REPO="ID.-ERA-9X";
+var DATA_PATH="data.json";
+var ADMIN_PASSWORD="admin123"; // 管理员密码（告知用户）
+
+var COPY_DATA=[];
+var COPY_SETTINGS={lowStockThreshold:10};
+var DATA_SHA=null;
+var seq=0;
+
+/* ===== 登录 ===== */
+var lock=document.getElementById("lock");
+var adminUI=document.getElementById("adminUI");
+var tokenInput=document.getElementById("tokenInput");
+
+function getToken(){return localStorage.getItem("era9x_gh_token")||"";}
+if(getToken()) tokenInput.value=getToken();
+
+document.getElementById("loginBtn").addEventListener("click",function(){
+  if(document.getElementById("pwInput").value!==ADMIN_PASSWORD){alert("密码错误");return;}
+  var tk=tokenInput.value.trim();
+  if(!tk){alert("请填写 GitHub Token");return;}
+  localStorage.setItem("era9x_gh_token",tk);
+  sessionStorage.setItem("era9x_admin","1");
+  unlock();
+});
+document.getElementById("pwInput").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("loginBtn").click();});
+document.getElementById("logoutBtn").addEventListener("click",function(){
+  sessionStorage.removeItem("era9x_admin");
+  lock.classList.remove("hide");
+  adminUI.style.display="none";
+});
+function unlock(){
+  lock.classList.add("hide");
+  adminUI.style.display="block";
+  loadData();
+}
+
+/* ===== GitHub API ===== */
+function api(path,opts){
+  opts=opts||{};
+  opts.headers=Object.assign({"Authorization":"Bearer "+getToken(),"Accept":"application/vnd.github+json"},opts.headers||{});
+  return fetch("https://api.github.com/repos/"+OWNER+"/"+REPO+"/contents/"+path,opts);
+}
+function b64encode(str){return btoa(unescape(encodeURIComponent(str)));}
+
+function loadData(){
+  api(DATA_PATH).then(function(r){
+    if(!r.ok) throw new Error("加载失败 "+r.status);
+    return r.json();
+  }).then(function(j){
+    DATA_SHA=j.sha;
+    var obj=JSON.parse(decodeURIComponent(escape(atob(j.content))));
+    COPY_DATA=obj.COPY_DATA||[];
+    COPY_SETTINGS=obj.COPY_SETTINGS||{lowStockThreshold:10};
+    document.getElementById("threshold").value=COPY_SETTINGS.lowStockThreshold;
+    renderAll();
+  }).catch(function(e){alert("读取 data.json 失败："+e.message+"\n请确认 Token 有该仓库写权限。");});
+}
+
+function saveData(){
+  var payload={COPY_DATA:COPY_DATA, COPY_SETTINGS:{lowStockThreshold:parseInt(document.getElementById("threshold").value,10)||0}};
+  var content=b64encode(JSON.stringify(payload,null,2));
+  if(!DATA_SHA){alert("尚未加载数据，无法保存");return;}
+  showToast("保存中…");
+  api(DATA_PATH,{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:"更新文案数据（管理后台）",content:content,sha:DATA_SHA})
+  }).then(function(r){
+    if(!r.ok) throw new Error("保存失败 "+r.status);
+    return r.json();
+  }).then(function(j){
+    DATA_SHA=j.content.sha;
+    showToast("✅ 已保存，前台约 1–2 分钟自动更新");
+  }).catch(function(e){alert("保存失败："+e.message);});
+}
+
+/* ===== 解析 ===== */
+function parseBatch(raw){
+  var out=[];(raw||"").split(/\r?\n/).forEach(function(line){
+    line=line.trim();if(!line)return;
+    var sep=line.indexOf("\t")!==-1?"\t":(line.indexOf("||")!==-1?"||":null);
+    if(sep){var p=line.split(sep).map(function(s){return s.trim()});var t=p.shift()||"";out.push({title:t,content:p.join(sep==="\t"?" ":"||").trim()});}
+    else out.push({title:"",content:line});
+  });
+  return out;
+}
+
+document.getElementById("parseBtn").addEventListener("click",function(){
+  parseBatch(document.getElementById("batchText").value).forEach(function(p){addItem(p.title,p.content);});
+  document.getElementById("batchText").value="";renderAll();
+});
+document.getElementById("clearBatch").addEventListener("click",function(){document.getElementById("batchText").value="";});
+document.getElementById("addSingle").addEventListener("click",function(){
+  var t=document.getElementById("singleTitle").value.trim();
+  var c=document.getElementById("singleContent").value.trim();
+  if(!c){alert("正文不能为空");return;}
+  addItem(t,c);
+  document.getElementById("singleTitle").value="";document.getElementById("singleContent").value="";
+  renderAll();
+});
+document.getElementById("fileInput").addEventListener("change",function(e){
+  var f=e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){parseBatch(rd.result).forEach(function(p){addItem(p.title,p.content);});renderAll();};
+  rd.readAsText(f);
+});
+document.getElementById("saveBtn").addEventListener("click",saveData);
+
+function addItem(title,content){seq++;COPY_DATA.push({id:"c"+Date.now()+"-"+seq,title:title||"",content:content});}
+
+/* ===== 渲染 ===== */
+function renderAll(){
+  document.getElementById("stAvail").textContent=COPY_DATA.length;
+  document.getElementById("stTotal").textContent=COPY_DATA.length;
+  var claimedIds=getClaimed();
+  document.getElementById("stClaimed").textContent=claimedIds.length;
+  document.getElementById("listCount").textContent=COPY_DATA.length;
+
+  var al=document.getElementById("availList");al.innerHTML="";
+  COPY_DATA.forEach(function(it,idx){
+    var row=document.createElement("div");row.className="item";
+    var b=document.createElement("div");b.className="b";
+    if(it.title){var t=document.createElement("div");t.className="t";t.textContent=it.title;b.appendChild(t);}
+    var x=document.createElement("div");x.className="x";x.textContent=it.content;b.appendChild(x);
+    var del=document.createElement("button");del.className="del";del.textContent="✕";
+    del.addEventListener("click",function(){COPY_DATA.splice(idx,1);renderAll();});
+    row.appendChild(b);row.appendChild(del);al.appendChild(row);
+  });
+
+  var cl=document.getElementById("claimedList");cl.innerHTML="";
+  if(claimedIds.length===0){cl.innerHTML='<p class="hint">暂无</p>';}
+  else claimedIds.forEach(function(id){
+    var it=COPY_DATA.filter(function(d){return d.id===id})[0];
+    var row=document.createElement("div");row.className="item";
+    var b=document.createElement("div");b.className="b";
+    var x=document.createElement("div");x.className="x";x.textContent=it?(it.title?("【"+it.title+"】"):"")+it.content:"（已删除）";b.appendChild(x);
+    row.appendChild(b);cl.appendChild(row);
+  });
+}
+function getClaimed(){try{return JSON.parse(localStorage.getItem("era9x_claimed_v1")||"[]")}catch(e){return[]}}
+
+var toastEl=document.getElementById("toast");var ttTimer=null;
+function showToast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(ttTimer);ttTimer=setTimeout(function(){toastEl.classList.remove("show")},2200);}
+
+/* 若已登录会话则直接进入 */
+if(sessionStorage.getItem("era9x_admin")==="1"&&getToken()){unlock();}
+</script>
+</body>
+</html>
